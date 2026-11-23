@@ -1,0 +1,9 @@
+# Worker 节点（NcgWorkerApplication）：调度/发件箱/直连扫描/批量（§3.4）
+server:
+  port: -1
+management:
+  server:
+    port: 9081
+ncg:
+  worker:
+    enabled: true   # Worker 应用激活调度任务组（§12）

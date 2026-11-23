@@ -1,0 +1,23 @@
+# Build artifacts
+target/
+frontend/dist/
+frontend/node_modules/
+node_modules/
+*.log
+
+# Local toolchains & data (JDK/Maven/PostgreSQL/test fixtures)
+.tools/
+
+# Session & editor state
+.agent-teams/
+.trae-html-share-packages/
+__pycache__/
+*.cookies
+*.bak
+*.bak2
+*.bak3
+.DS_Store
+.idea/
+.vscode/
+*.iml
+.githome/

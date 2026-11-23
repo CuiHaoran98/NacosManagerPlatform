@@ -1,0 +1,78 @@
+spring:
+  application:
+    name: ncg
+  datasource:
+    url: ${NCG_DB_URL:jdbc:postgresql://localhost:5432/ncg}
+    username: ${NCG_DB_USER:ncg}
+    password: ${NCG_DB_PASSWORD:ncg}
+    hikari:
+      maximum-pool-size: ${NCG_DB_POOL_SIZE:10}
+      connection-init-sql: SET search_path TO ncg, public
+  flyway:
+    enabled: true
+    schemas: ncg
+    default-schema: ncg
+  session:
+    jdbc:
+      table-name: ncg_session
+      initialize-schema: never
+  jackson:
+    time-zone: UTC
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+        secure: ${NCG_COOKIE_SECURE:true}
+      timeout: ${NCG_SESSION_TIMEOUT:30m}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  # TongNCS/Nacos 不可用不作为 Web 下线条件（§16）：readiness 只含 DB
+  health:
+    readinessstate:
+      enabled: true
+    livenessstate:
+      enabled: true
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-}]"
+
+# 平台参数（详细设计 v1.1 §17 / spec 附录 F；标 TBD 的值为建议默认，A-01~A-08 闭环后固化）
+ncg:
+  content-max-bytes: ${NCG_CONTENT_MAX_BYTES:1048576}   # [Assumption, TBD] A-02
+  batch-max-items: ${NCG_BATCH_MAX_ITEMS:50}            # [Assumption, TBD] A-03
+  gray-window-minutes: ${NCG_GRAY_WINDOW_MINUTES:30}    # [Assumption, TBD] A-04
+  scan-interval-seconds: ${NCG_SCAN_INTERVAL_SECONDS:300}
+  worker:
+    enabled: ${NCG_WORKER_ENABLED:false}
+  crypto:
+    key: ${NCG_CRYPTO_KEY:}        # base64 32 字节 AES-256-GCM
+    key-id: ${NCG_CRYPTO_KEY_ID:}
+  wecom:
+    webhook-default: ${NCG_WECOM_WEBHOOK_DEFAULT:}
+  nacos:
+    mode: ${NCG_NACOS_MODE:fake}   # fake=内存假件；real=真实 Nacos OpenAPI
+    envs:
+      dev:
+        endpoint: ${NCG_NACOS_DEV_ENDPOINT:}
+        token: ${NCG_NACOS_DEV_TOKEN:}
+      staging:
+        endpoint: ${NCG_NACOS_STAGING_ENDPOINT:}
+        token: ${NCG_NACOS_STAGING_TOKEN:}
+      prod:
+        endpoint: ${NCG_NACOS_PROD_ENDPOINT:}
+        token: ${NCG_NACOS_PROD_TOKEN:}

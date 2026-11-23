@@ -1,0 +1,160 @@
+/*
+ * NCG 设计 token —— frontend-design-pro 规范
+ * - 色彩：OKLCH 色彩空间定义（感知均匀）；中性色带冷色调（hue ≈ 264），不用纯灰/纯黑；
+ *   暗色基底 ≈ #0f0f0f 亮度但保持色调（oklch 17.2% / 0.008 / 264）
+ * - 字体：显示字体 DM Sans + Noto Sans SC；数据 IBM Plex Mono + tabular-nums
+ *   禁用 Arial / Inter / system-ui 作显示字体；同页 ≤2 字体族（显示族 + 数据族）
+ *   字号 modular scale 1.25；正文排版宽度 65ch；宽容器 1280px
+ * - 空间：8px 网格倍数，留白呼吸感
+ * - 动效：easing cubic-bezier(0.16, 1, 0.3, 1)；微交互 100–200ms；
+ *   页面过渡 300–500ms；禁 bounce/elastic；≤600ms
+ * - 可访问性：prefers-reduced-motion 全局降级；focus-visible 清晰可见
+ * 视觉基调对齐详细设计 §3.5.5（ink / panel / volt / amber / red / cyan）。
+ */
+
+:root {
+  /* ===== 色板（OKLCH） ===== */
+  /* 基底（≈ #0f0f0f 亮度、带 264 色调，禁纯黑纯灰） */
+  --ncg-ink: oklch(17.2% 0.008 264);          /* ≈ #0F1014 页面底色 */
+  --ncg-panel: oklch(21.2% 0.015 266);        /* ≈ #161A23 面板 */
+  --ncg-panel-2: oklch(24.8% 0.020 264);      /* ≈ #1D222D 次级面板/悬浮 */
+  --ncg-line: oklch(29.2% 0.022 262);         /* ≈ #262C38 1px 分隔线 */
+  --ncg-line-strong: oklch(35.5% 0.027 261);  /* ≈ #343D4B 强分隔 */
+
+  /* 中性文字（冷色调，非纯灰） */
+  --ncg-text-1: oklch(93.6% 0.012 264.5);     /* #E6EAF2 主文字 */
+  --ncg-text-2: oklch(71.7% 0.031 264.4);     /* #9AA4B8 次文字 */
+  --ncg-text-3: oklch(50.5% 0.031 262.2);     /* #5B6577 弱文字/占位 */
+
+  /* 强调与状态（只用于动作与状态，不用于装饰） */
+  --ncg-volt: oklch(90.0% 0.191 123.3);       /* #C6F24E 主动作/强调 */
+  --ncg-volt-deep: oklch(78% 0.175 122);
+  --ncg-amber: oklch(82.7% 0.136 69.0);       /* #FFB55C 警告 / 不确定 */
+  --ncg-red: oklch(70.9% 0.183 27.7);         /* #FF6B5E 危险 / 驳回 */
+  --ncg-cyan: oklch(81.6% 0.086 217.7);       /* #7FD1E8 信息 */
+
+  /* 状态底色（低饱和） */
+  --ncg-volt-bg: oklch(27% 0.075 124);
+  --ncg-amber-bg: oklch(26% 0.055 70);
+  --ncg-red-bg: oklch(25% 0.065 28);
+  --ncg-cyan-bg: oklch(25% 0.045 218);
+
+  /* 语义别名（仅为兼容视图层既有引用；新代码请直接用上方原语 token） */
+  --ncg-text-muted: var(--ncg-text-3);
+  --ncg-border: var(--ncg-line);
+  --ncg-accent: var(--ncg-volt);
+  --ncg-success: var(--ncg-volt);
+  --ncg-warning: var(--ncg-amber);
+  --ncg-danger: var(--ncg-red);
+
+  /* ===== 字体 ===== */
+  --ncg-font-display: 'DM Sans', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --ncg-font-body: 'DM Sans', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --ncg-font-data: 'IBM Plex Mono', 'Noto Sans SC', monospace;
+  --ncg-font-mono: var(--ncg-font-data); /* 兼容别名（代码/数据场景） */
+
+  /* 字号（modular scale 1.25：13→16→20→25→31，小阶 12/13） */
+  --ncg-fs-xs: 12px;
+  --ncg-fs-sm: 13px;
+  --ncg-fs-base: 14px;
+  --ncg-fs-md: 16px;
+  --ncg-fs-lg: 20px;
+  --ncg-fs-xl: 25px;
+  --ncg-fs-2xl: 31px;
+
+  /* ===== 空间（8px 网格） ===== */
+  --ncg-space-1: 8px;
+  --ncg-space-2: 16px;
+  --ncg-space-3: 24px;
+  --ncg-space-4: 32px;
+  --ncg-space-5: 40px;
+  --ncg-space-6: 48px;
+  --ncg-space-8: 64px;
+
+  /* ===== 圆角 ===== */
+  --ncg-radius-sm: 6px;
+  --ncg-radius-md: 10px;
+  --ncg-radius-lg: 14px;
+
+  /* ===== 动效 ===== */
+  --ncg-ease: cubic-bezier(0.16, 1, 0.3, 1); /* 快入慢出，禁 bounce/elastic */
+  --ncg-dur-micro: 120ms;   /* 微交互 100–200ms */
+  --ncg-dur-base: 180ms;
+  --ncg-dur-slow: 240ms;    /* 面板/抽屉等较大位移 */
+  --ncg-dur-page: 320ms;    /* 页面过渡 300–500ms */
+
+  /* ===== 布局 ===== */
+  --ncg-sidebar-width: 216px;
+  --ncg-topbar-height: 56px;
+  --ncg-layout-sidebar: var(--ncg-sidebar-width); /* 兼容别名（布局壳使用） */
+  --ncg-layout-topbar: var(--ncg-topbar-height);
+  --ncg-content-max: 1280px;  /* 宽容器 */
+  --ncg-measure: 65ch;        /* 正文排版宽度 */
+
+  /* ===== Element Plus 映射（深色控制台） ===== */
+  --el-color-primary: var(--ncg-volt);
+  --el-color-primary-light-3: oklch(82% 0.15 123);
+  --el-color-primary-light-5: oklch(72% 0.12 123);
+  --el-color-primary-light-7: oklch(52% 0.09 123);
+  --el-color-primary-light-8: oklch(40% 0.07 123);
+  --el-color-primary-light-9: var(--ncg-volt-bg);
+  --el-color-primary-dark-2: var(--ncg-volt-deep);
+
+  --el-color-success: oklch(75% 0.17 150);
+  --el-color-warning: var(--ncg-amber);
+  --el-color-danger: var(--ncg-red);
+  --el-color-error: var(--ncg-red);
+  --el-color-info: var(--ncg-cyan);
+
+  --el-bg-color: var(--ncg-panel);
+  --el-bg-color-page: var(--ncg-ink);
+  --el-bg-color-overlay: var(--ncg-panel-2);
+  --el-fill-color-blank: var(--ncg-panel);
+  --el-fill-color: var(--ncg-panel-2);
+  --el-fill-color-light: oklch(23.5% 0.018 265);
+  --el-fill-color-lighter: oklch(22.5% 0.016 265);
+
+  --el-text-color-primary: var(--ncg-text-1);
+  --el-text-color-regular: var(--ncg-text-2);
+  --el-text-color-secondary: var(--ncg-text-3);
+  --el-text-color-placeholder: var(--ncg-text-3);
+  --el-text-color-disabled: oklch(40% 0.025 262);
+
+  --el-border-color: var(--ncg-line);
+  --el-border-color-light: var(--ncg-line);
+  --el-border-color-lighter: oklch(25% 0.019 263);
+  --el-border-color-extra-light: oklch(22% 0.015 264);
+  --el-border-color-dark: var(--ncg-line-strong);
+
+  --el-border-radius-base: var(--ncg-radius-md);
+  --el-border-radius-small: var(--ncg-radius-sm);
+  --el-border-radius-round: var(--ncg-radius-lg);
+
+  --el-font-family: var(--ncg-font-body);
+  --el-font-size-base: var(--ncg-fs-base);
+  --el-font-size-small: var(--ncg-fs-sm);
+
+  --el-box-shadow-light: 0 1px 2px oklch(10% 0.01 264 / 0.4);
+  --el-box-shadow: 0 4px 16px oklch(10% 0.01 264 / 0.45);
+  --el-box-shadow-dark: 0 8px 28px oklch(8% 0.01 264 / 0.55);
+
+  --el-mask-color: oklch(17.2% 0.008 264 / 0.75);
+}
+
+/* ===== 全局可访问性 ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* focus 可见性：禁止移除 outline，使用带色调焦点环 */
+:focus-visible {
+  outline: 2px solid oklch(90% 0.191 123.3 / 0.9);
+  outline-offset: 2px;
+}

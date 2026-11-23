@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TongNCS 配置治理平台（NCG）产品需求文档</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --ink:#1b2330; --muted:#5f6b7a; --line:#e4e8ee;
+    --brand:#0f6fff; --brand-soft:#eaf2ff;
+    --ok:#0f9d58; --ok-soft:#e7f6ee;
+    --warn:#b26a00; --warn-soft:#fff4e2;
+    --danger:#d63b3b; --danger-soft:#fdecec;
+    --purple:#7154ff; --purple-soft:#f0ecff;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(16,24,40,.04),0 10px 30px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.75;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  a{color:var(--brand);text-decoration:none}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .shadow{box-shadow:var(--shadow)}
+  .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:34px;max-width:1240px;margin:0 auto;padding:0 24px}
+  aside{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;padding:30px 0 40px;border-right:1px solid var(--line)}
+  .brandbox{display:flex;align-items:center;gap:10px;padding:0 10px 18px}
+  .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#0f6fff,#7154ff);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;letter-spacing:.5px}
+  .brandbox b{display:block;font-size:13.5px;line-height:1.3}
+  .brandbox span{display:block;font-size:11px;color:var(--muted)}
+  .toc-title{font-size:11px;letter-spacing:.12em;color:#98a2b3;padding:10px 10px 6px;text-transform:uppercase}
+  .toc a{display:block;padding:6px 10px;border-radius:8px;color:var(--muted);font-size:13px;line-height:1.5}
+  .toc a:hover{background:#f0f2f5;color:var(--ink)}
+  .toc a.active{background:var(--brand-soft);color:var(--brand);font-weight:600}
+  main{padding:30px 0 90px;min-width:0}
+  .hero{background:linear-gradient(135deg,#0f6fff 0%,#3f7dff 45%,#7154ff 100%);border-radius:18px;color:#fff;padding:30px 32px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;right:-60px;top:-70px;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.12)}
+  .hero .eyebrow{font-size:12px;letter-spacing:.18em;opacity:.85;text-transform:uppercase}
+  .hero h1{margin:8px 0 6px;font-size:27px;line-height:1.3}
+  .hero p{margin:0;opacity:.92;max-width:720px}
+  .meta-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;position:relative;z-index:1}
+  .chip{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);padding:4px 11px;border-radius:999px;font-size:12px}
+  section{margin-top:34px;scroll-margin-top:18px}
+  .sec-head{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
+  .sec-no{font-size:12px;font-weight:700;color:var(--brand);background:var(--brand-soft);padding:2px 9px;border-radius:7px;font-family:ui-monospace,Menlo,monospace}
+  h2{font-size:20px;margin:0;letter-spacing:.01em}
+  .sec-sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+  h3{font-size:15.5px;margin:20px 0 8px}
+  h4{font-size:14px;margin:0 0 6px}
+  p{margin:8px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+  .card + .card{margin-top:14px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .kpi .n{font-size:22px;font-weight:700;line-height:1.2}
+  .kpi .l{font-size:12px;color:var(--muted);margin-top:2px}
+  .tbl{width:100%;border-collapse:collapse;font-size:13px}
+  .tbl th{text-align:left;color:var(--muted);font-weight:600;font-size:12px;padding:9px 10px;border-bottom:1px solid var(--line);background:#fafbfc;white-space:nowrap}
+  .tbl td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  .tbl tr:last-child td{border-bottom:0}
+  .tbl .sub,.sub{color:var(--muted);font-size:12px}
+  .tbl-wrap{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:auto}
+  .pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:11.5px;font-weight:600;line-height:1.7;white-space:nowrap}
+  .pill.ok{background:var(--ok-soft);color:var(--ok)}
+  .pill.info{background:var(--brand-soft);color:var(--brand)}
+  .pill.warn{background:var(--warn-soft);color:var(--warn)}
+  .pill.danger{background:var(--danger-soft);color:var(--danger)}
+  .pill.purple{background:var(--purple-soft);color:var(--purple)}
+  .pill.muted{background:#eef1f4;color:var(--muted)}
+  .pill.p0{background:var(--danger-soft);color:var(--danger)}
+  .pill.p1{background:var(--purple-soft);color:var(--purple)}
+  .pill.assume{background:var(--warn-soft);color:var(--warn);font-weight:500}
+  .callout{border-left:3px solid var(--brand);background:var(--brand-soft);border-radius:0 10px 10px 0;padding:12px 16px;font-size:13px}
+  .callout.warn{border-color:var(--warn);background:var(--warn-soft)}
+  .callout.danger{border-color:var(--danger);background:var(--danger-soft)}
+  .callout b{color:inherit}
+  ul,ol{margin:8px 0;padding-left:22px}
+  li{margin:4px 0}
+  .muted{color:var(--muted)}
+  .small{font-size:12.5px}
+  code.k{background:#eef1f4;border-radius:5px;padding:1px 6px;font-size:12px;font-family:ui-monospace,Menlo,monospace}
+
+  /* FR blocks */
+  .fr{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin:16px 0;overflow:hidden;box-shadow:var(--shadow);scroll-margin-top:16px}
+  .fr-head{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#fbfcfe,#fff)}
+  .fr-no{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--brand);background:var(--brand-soft);padding:2px 8px;border-radius:6px;font-weight:700}
+  .fr-head h3{margin:0;font-size:15.5px;flex:1}
+  .fr-body{padding:4px 18px 14px}
+  .kv{display:grid;grid-template-columns:92px minmax(0,1fr);gap:4px 14px;padding:9px 0;border-bottom:1px dashed var(--line);margin:0}
+  .kv:last-child{border-bottom:0}
+  .kv dt{color:var(--muted);font-weight:600;font-size:12.5px;padding-top:2px}
+  .kv dd{margin:0;min-width:0}
+  .kv ul{margin:2px 0}
+
+  /* Demo shell */
+  .demo{border:1px solid #d7e2f5;background:linear-gradient(180deg,#fbfdff,#fff);border-radius:14px;padding:16px;margin:16px 0}
+  .demo-head{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+  .demo-head .dot{width:8px;height:8px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 4px var(--brand-soft)}
+  .demo-head b{font-size:13.5px}
+  .demo-head .hint{margin-left:auto;font-size:11.5px;color:var(--muted)}
+  .btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:6px 14px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;transition:.15s}
+  .btn:hover{border-color:#c3cddb;background:#f8fafc}
+  .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+  .btn.primary:hover{background:#0b5fe0}
+  .btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+  .btn.danger{background:#fff;border-color:#f0b4b4;color:var(--danger)}
+  .btn.ghost{background:transparent}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .hidden{display:none !important}
+
+  /* Wizard */
+  .wsteps{display:flex;gap:6px;margin-bottom:16px}
+  .wstep{flex:1;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;background:#f1f4f8;color:var(--muted);font-size:12.5px}
+  .wstep .idx{width:20px;height:20px;border-radius:50%;background:#fff;border:1px solid #d3dbe6;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex:none}
+  .wstep.active{background:var(--brand-soft);color:var(--brand);font-weight:600}
+  .wstep.active .idx{background:var(--brand);border-color:var(--brand);color:#fff}
+  .wstep.done{background:#f0f7f3;color:var(--ok)}
+  .wstep.done .idx{background:var(--ok);border-color:var(--ok);color:#fff}
+  .wpanel{min-height:0}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:5px}
+  .field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:13px;background:#fff;font-family:inherit;color:var(--ink)}
+  .field textarea{font-family:ui-monospace,Menlo,monospace;line-height:1.65;min-height:190px;resize:vertical}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+  .row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .diff{background:#0f172a;border-radius:10px;padding:10px 0;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.7;overflow:auto;max-height:260px}
+  .diff .ln{display:flex;padding:0 12px;white-space:pre}
+  .diff .ln .g{width:18px;flex:none;color:#64748b;user-select:none}
+  .diff .ln.same{color:#cbd5e1}
+  .diff .ln.add{background:rgba(15,157,88,.16);color:#8ef0b6}
+  .diff .ln.del{background:rgba(214,59,59,.16);color:#ffb0b0}
+  .impact{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
+  .impact .ic{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+  .impact .ic .v{font-size:18px;font-weight:700}
+  .impact .ic .t{font-size:11.5px;color:var(--muted)}
+  .riskbar{display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:10px;background:var(--warn-soft);color:var(--warn);font-size:13px;margin-top:6px}
+  .riskbar.low{background:var(--ok-soft);color:var(--ok)}
+  .riskbar.high{background:var(--danger-soft);color:var(--danger)}
+
+  /* Change request panel */
+  .cr{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:14px}
+  .cr-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .cr-id{font-family:ui-monospace,Menlo,monospace;font-size:13px;font-weight:700}
+  .sm{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:10px;background:#fafbfc;border:1px solid var(--line);border-radius:10px}
+  .sm-chip{font-size:11.5px;padding:3px 9px;border-radius:999px;background:#eef1f4;color:var(--muted);border:1px solid transparent}
+  .sm-chip.active{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:600}
+  .sm-arrow{color:#b9c2cf;font-size:11px}
+  .sm-branch{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+  .sm-branch .lab{font-size:11px;color:var(--muted);align-self:center;margin-right:2px}
+  .sm-chip.branch.active{background:var(--danger);border-color:var(--danger)}
+  .cr-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .log{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px;max-height:170px;overflow:auto}
+  .log-item{display:flex;gap:10px;font-size:12.5px;padding:3px 0}
+  .log-item .t{color:#98a2b3;font-family:ui-monospace,Menlo,monospace;flex:none}
+  .log-item .m{color:var(--ink)}
+  .log-item.ok .m{color:var(--ok)}
+  .log-item.run .m{color:var(--brand)}
+  .log-empty{font-size:12px;color:#98a2b3}
+
+  /* Tabs / dashboard */
+  .tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:12px;flex-wrap:wrap}
+  .tab{border:0;background:transparent;padding:8px 12px;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;font-family:inherit}
+  .tab.active{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
+  .tab .cnt{display:inline-block;min-width:18px;padding:0 5px;margin-left:5px;border-radius:999px;background:#eef1f4;font-size:11px;color:var(--muted)}
+  .tab.active .cnt{background:var(--brand-soft);color:var(--brand)}
+  .task{display:flex;align-items:center;gap:11px;padding:10px 4px;border-bottom:1px solid var(--line);font-size:13px}
+  .task:last-child{border-bottom:0}
+  .task .tag{font-size:11px;padding:1px 8px;border-radius:6px;background:#eef1f4;color:var(--muted);flex:none}
+  .task .tag.hot{background:var(--danger-soft);color:var(--danger)}
+  .task .grow{flex:1;min-width:0}
+  .task .grow .s{color:var(--muted);font-size:11.5px}
+  .empty{padding:22px;text-align:center;color:#98a2b3;font-size:13px}
+
+  /* Audit */
+  .filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .filter{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 12px;font-size:12px;color:var(--muted);cursor:pointer;font-family:inherit}
+  .filter.active{background:var(--brand);border-color:var(--brand);color:#fff}
+  .search{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:13px;margin-bottom:10px;font-family:inherit}
+  .search:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+  .audit-table{width:100%;border-collapse:collapse;font-size:12.5px}
+  .audit-table th{text-align:left;color:var(--muted);font-size:11.5px;font-weight:600;padding:8px 9px;border-bottom:1px solid var(--line);background:#fafbfc;white-space:nowrap}
+  .audit-table td{padding:8px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+  .audit-table tbody tr{cursor:pointer}
+  .audit-table tbody tr:hover{background:#f8fbff}
+  .audit-table tr.row-alert{background:#fff8f6}
+  .audit-table tr.row-alert:hover{background:#fff1ee}
+  .audit-table tr.selected{background:var(--brand-soft)}
+  .ad{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:12px;background:#fff}
+  .ad-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+  .ad h4{font-size:14.5px;margin:6px 0 10px}
+  .ad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 14px}
+  .ad-field{font-size:12px;min-width:0}
+  .ad-field span{display:block;color:#98a2b3;font-size:11px}
+  .ad-field b{display:block;font-weight:500;word-break:break-all}
+  .ad-diff{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .ad-diff .lbl{font-size:11px;color:var(--muted);margin-bottom:4px}
+  .ad-diff pre{margin:0;background:#0f172a;color:#e2e8f0;border-radius:9px;padding:10px 12px;font-size:12px;overflow:auto;font-family:ui-monospace,Menlo,monospace;min-height:52px}
+  .note{font-size:12.5px;border-radius:9px;padding:9px 12px;margin:10px 0 0}
+  .danger-note{background:var(--danger-soft);color:var(--danger)}
+
+  .footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:#98a2b3;font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+  @media (max-width:920px){
+    .layout{grid-template-columns:1fr;padding:0 16px;gap:0}
+    aside{display:none}
+    .hero{padding:24px 20px}
+    .hero h1{font-size:22px}
+    .grid-2,.grid-3,.grid-4,.impact,.ad-grid,.ad-diff,.row-2{grid-template-columns:1fr}
+    .wsteps{flex-direction:column}
+    .kv{grid-template-columns:1fr;gap:2px}
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside>
+    <div class="brandbox">
+      <div class="logo">NCG</div>
+      <div>
+        <b>TongNCS 配置治理平台</b>
+        <span>产品需求文档 · v1.1</span>
+      </div>
+    </div>
+    <div class="toc-title">目录</div>
+    <nav class="toc">
+      <a href="#contract">1 产品契约</a>
+      <a href="#background">2 背景与问题</a>
+      <a href="#scope">3 范围与边界</a>
+      <a href="#roles">4 用户与角色</a>
+      <a href="#model">5 核心对象与状态</a>
+      <a href="#flows">6 核心流程</a>
+      <a href="#fr">7 功能需求</a>
+      <a href="#rules">8 共享规则</a>
+      <a href="#exceptions">9 异常与边界</a>
+      <a href="#p1">10 后续增强（P1）</a>
+      <a href="#questions">11 决策记录</a>
+      <a href="#glossary">12 术语表</a>
+    </nav>
+  </aside>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Product Requirements · 决策确认版</div>
+      <h1>TongNCS 配置治理平台（NCG）</h1>
+      <p>在现有 TongNCS 之上增加变更审批、发布管控、全量审计与影响面提示。TongNCS 继续作为配置内容的唯一事实源，平台不替换、不改造 TongNCS，也不引入第二套配置存储。</p>
+      <p class="small" style="margin-top:6px;opacity:.88">说明：TongNCS 是公司在用的配置平台，使用体验与 Nacos 趋同；本文沿用的 Namespace / Group / DataId、Beta / Tag 灰度等术语，均指 TongNCS 的对应能力。</p>
+      <div class="meta-chips">
+        <span class="chip">版本 v1.1</span>
+        <span class="chip">日期 2026-11-21</span>
+        <span class="chip">范围 P0 · 12 项功能</span>
+        <span class="chip">底层存储：现有 TongNCS</span>
+        <span class="chip">生产单人会签</span>
+        <span class="chip">审计永久保留</span>
+      </div>
+    </header>
+
+    <!-- 1 产品契约 -->
+    <section id="contract">
+      <div class="sec-head"><span class="sec-no">01</span><h2>产品契约</h2></div>
+      <p class="sec-sub">先固定"为谁、在什么时刻、完成什么、什么算完成、凭什么信任"，后续功能都由此推导。</p>
+      <div class="card">
+        <table class="tbl">
+          <tbody>
+            <tr>
+              <th style="width:128px">主要用户</th>
+              <td>已经在使用 TongNCS 的研发团队：应用负责人、配置编辑者、发布者、审批人、审计员。他们已有 TongNCS，痛点不是"没有配置中心"，而是"缺少变更治理"。</td>
+            </tr>
+            <tr>
+              <th>触发时刻</th>
+              <td>需要修改生产配置；需要向审计/合规证明"谁在何时改了什么"；需要阻止未经审批的配置进入生产；需要快速回滚；需要在多个环境之间安全地搬运配置。</td>
+            </tr>
+            <tr>
+              <th>核心任务</th>
+              <td>把"直接改 TongNCS"变成"发起变更单 → 审批 → 受控发布 → 读回校验 → 全程审计 → 可回滚"的闭环，同时保持 TongNCS 仍是运行时读取配置的唯一来源。</td>
+            </tr>
+            <tr>
+              <th>完成条件</th>
+              <td>一次配置变更从提出到生效，全过程可追溯、可举证；未经平台发布的直连 TongNCS 变更能被发现并报警；生产变更由提交人以外的一名审批人单人会签把关；失败可安全回滚，误删可在 30 天内恢复。</td>
+            </tr>
+            <tr>
+              <th>信任基础</th>
+              <td>① 生效配置只存在于 TongNCS，平台草稿与快照不作为运行时来源；② 每次写入都读回校验；③ 审计只追加、不可修改、可导出校验；④ 权限判断失败时默认拒绝。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout" style="margin-top:14px">
+        <b>一句话定位：</b>NCG 是 TongNCS 的"治理层"，不是"替代品"。TongNCS 负责存配置、推配置；NCG 负责谁能改、怎么审、何时发、发了什么、出问题怎么退。
+      </div>
+    </section>
+
+    <!-- 2 背景与问题 -->
+    <section id="background">
+      <div class="sec-head"><span class="sec-no">02</span><h2>背景与问题</h2></div>
+      <p class="sec-sub">TongNCS 的配置中心能力已经覆盖"存、推、灰度、版本"，缺的是围绕变更的组织级控制。</p>
+
+      <div class="grid-3">
+        <div class="kpi"><div class="n" style="color:var(--brand)">已有</div><div class="l">Namespace / Group / DataId 配置模型、历史版本与回滚、Beta/Tag 灰度、基础 RBAC；dev / staging / prod 为独立实例部署</div></div>
+        <div class="kpi"><div class="n" style="color:var(--warn)">缺失</div><div class="l">审批流、编辑与发布强制分离、全量操作审计、应用-环境语义、变更单与影响面</div></div>
+        <div class="kpi"><div class="n" style="color:var(--danger)">风险</div><div class="l">直连 TongNCS 的改动无法被治理；TongNCS 自身历史保留有限，需平台长期留存证据；事故复盘缺少完整证据链</div></div>
+      </div>
+
+      <h3>2.1 现状能力与缺口</h3>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th style="width:180px">能力域</th><th style="width:220px">TongNCS 现状</th><th>本平台要补齐的部分</th></tr></thead>
+          <tbody>
+            <tr><td>配置存储</td><td>Namespace / Group / DataId 三级坐标</td><td>不改存储模型，只在上层建立"应用 / 环境 / 逻辑配置名"的映射</td></tr>
+            <tr><td>版本与回滚</td><td>有配置历史与回滚</td><td>把回滚纳入变更单与审计；区分"回上一版"和"回更早版本"的风险等级</td></tr>
+            <tr><td>灰度</td><td>支持 Beta / Tag 灰度</td><td>把灰度范围、观察窗口、放量与回滚动作记录为可审计的发布过程</td></tr>
+            <tr><td>权限</td><td>基于命名空间与数据 ID 的读写删</td><td>增加"应用 × 环境"业务语义权限，以及审批、发布、审计导出等治理权限点</td></tr>
+            <tr><td>审计</td><td>有配置变更历史，但不是覆盖登录、授权、发布、导出的全量审计</td><td>建立只追加的全量审计中心，覆盖平台内所有关键动作与直连变更检测</td></tr>
+            <tr><td>变更流程</td><td>编辑后直接发布</td><td>变更单 + Diff + 影响面 + 审批 + 计划发布 + 发布记录</td></tr>
+            <tr><td>可观测</td><td>可查监听者</td><td>把订阅实例数、受影响应用转为发布前的决策信息</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>2.2 典型事故路径（本产品要阻断的）</h3>
+      <div class="card">
+        <ol>
+          <li><b>无审批直改生产：</b>某同学为快速修复问题，直接在 TongNCS 控制台改生产配置，没有第二人知晓；出事后无法还原"为什么改、谁同意"。<span class="muted">→ FR-03、FR-05</span></li>
+          <li><b>基于过期内容编辑：</b>变更单编辑期间他人已发布新版本，发布时覆盖了对方的改动。<span class="muted">→ FR-02 基线校验</span></li>
+          <li><b>不知道影响谁：</b>改了一个看似无关的开关，导致大量实例行为变化。<span class="muted">→ FR-07 影响面</span></li>
+          <li><b>发布结果不确定：</b>客户端提示超时，但配置实际已写入；重复发布造成二次抖动。<span class="muted">→ FR-04 幂等与读回校验</span></li>
+          <li><b>审计断档：</b>需要举证时发现只有 30 天历史，且没有导出与校验手段。<span class="muted">→ FR-05 审计保留与导出</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 3 范围与边界 -->
+    <section id="scope">
+      <div class="sec-head"><span class="sec-no">03</span><h2>范围与边界</h2></div>
+      <p class="sec-sub">P0 只做"让一次生产配置变更可被治理"的最小闭环，其余进入 P1。</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h4>P0 包含</h4>
+          <ul>
+            <li>FR-01 配置目录与详情</li>
+            <li>FR-02 变更单与 Diff</li>
+            <li>FR-03 审批中心</li>
+            <li>FR-04 发布与灰度</li>
+            <li>FR-05 全量操作审计</li>
+            <li>FR-06 权限与授权</li>
+            <li>FR-07 影响面与风险提示</li>
+            <li>FR-08 回滚</li>
+            <li>FR-09 通知与集成</li>
+            <li>FR-10 平台设置与 TongNCS 连接</li>
+            <li>FR-11 多环境对比与受控同步</li>
+            <li>FR-12 定时发布与批量变更单</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>明确不做</h4>
+          <ul>
+            <li>不替换 TongNCS，不实现第二套配置存储</li>
+            <li>不修改 TongNCS 内核，不要求升级到特定商业版本</li>
+            <li>不做服务发现、注册中心治理</li>
+            <li>不做 CI/CD 流水线、镜像发布</li>
+            <li>不做通用工单/ITSM 系统</li>
+            <li>不自建 KMS，密钥托管走既有安全设施</li>
+            <li>多环境同步为单向受控同步：从源环境生成目标环境变更单，不做双向自动回写</li>
+            <li>不提供紧急发布通道，也不接入 SSO</li>
+            <li>不做多租户隔离：平台为公司团队内部使用，默认单租户</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout warn" style="margin-top:14px">
+        <b>存储边界：</b>平台只持久化"治理元数据"——变更单、审批任务、发布记录、审计事件、授权关系、配置映射与草稿。配置的生效值永远以 TongNCS 为准；平台不得把自身数据库当作运行时配置源。
+      </div>
+    </section>
+
+    <!-- 4 用户与角色 -->
+    <section id="roles">
+      <div class="sec-head"><span class="sec-no">04</span><h2>用户与角色</h2></div>
+      <p class="sec-sub">角色可叠加，但同一个变更单上强制职责分离。</p>
+
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th style="width:140px">角色</th><th>职责</th><th style="width:260px">典型操作</th></tr></thead>
+          <tbody>
+            <tr><td><b>平台管理员</b></td><td>维护 TongNCS 连接、配置映射、全局策略与通知渠道</td><td>接入 TongNCS、配置映射、设定审批策略</td></tr>
+            <tr><td><b>应用负责人</b></td><td>对某应用在生产的行为负责，可授权，是高危变更的固定审批人</td><td>审批高风险变更、分配角色、处理直连告警</td></tr>
+            <tr><td><b>配置编辑者</b></td><td>编写变更内容并提交审批</td><td>创建变更单、编辑草稿、查看 Diff</td></tr>
+            <tr><td><b>发布者</b></td><td>把已审批的变更写入 TongNCS</td><td>执行发布、灰度放量、回滚上一版</td></tr>
+            <tr><td><b>审批人</b></td><td>对变更内容与影响面做独立判断</td><td>通过、驳回、转交</td></tr>
+            <tr><td><b>审计员</b></td><td>查询与导出审计证据，不参与变更</td><td>检索审计、导出报表、核对哈希链</td></tr>
+            <tr><td><b>只读观察者</b></td><td>查看配置与治理状态，不可编辑</td><td>浏览目录、查看发布记录</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>4.1 权限矩阵（P0）</h3>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>操作</th><th>只读观察者</th><th>配置编辑者</th><th>发布者</th><th>审批人</th><th>应用负责人</th><th>审计员</th><th>平台管理员</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>查看配置目录与详情</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+            <tr><td>查看敏感配置明文</td><td>—</td><td>—</td><td>—</td><td>✓</td><td>✓</td><td>—</td><td>✓</td></tr>
+            <tr><td>创建 / 编辑变更单</td><td>—</td><td>✓</td><td>—</td><td>—</td><td>✓</td><td>—</td><td>✓</td></tr>
+            <tr><td>审批变更单</td><td>—</td><td>—</td><td>—</td><td>✓</td><td>✓</td><td>—</td><td>✓</td></tr>
+            <tr><td>执行发布 / 灰度</td><td>—</td><td>—</td><td>✓</td><td>—</td><td>✓</td><td>—</td><td>✓</td></tr>
+            <tr><td>回滚上一版</td><td>—</td><td>—</td><td>✓</td><td>—</td><td>✓</td><td>—</td><td>✓</td></tr>
+            <tr><td>查看本人相关审计</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+            <tr><td>查看全部审计 / 导出</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>✓</td><td>✓</td></tr>
+            <tr><td>授权与角色管理</td><td>—</td><td>—</td><td>—</td><td>—</td><td>本应用</td><td>—</td><td>✓</td></tr>
+            <tr><td>维护 TongNCS 连接与映射</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>✓</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted">注：✓ 表示在授权范围内允许操作；"—" 表示默认不允许。所有权限判断以"平台授权 + TongNCS 服务账号权限"同时满足为准。</p>
+    </section>
+
+    <!-- 5 核心对象与状态 -->
+    <section id="model">
+      <div class="sec-head"><span class="sec-no">05</span><h2>核心对象与状态</h2></div>
+      <p class="sec-sub">对象模型决定权限、审计与状态的挂载点，必须先固定。</p>
+
+      <h3>5.1 对象定义</h3>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th style="width:150px">对象</th><th>说明</th><th style="width:250px">关键字段</th></tr></thead>
+          <tbody>
+            <tr><td><b>应用</b></td><td>治理的业务单元，一个应用可包含多个配置</td><td>应用标识、名称、负责人、负责人组</td></tr>
+            <tr><td><b>环境</b></td><td>dev / staging / prod 等逻辑环境</td><td>环境标识、对应 TongNCS 实例与命名空间、风险等级</td></tr>
+            <tr><td><b>配置</b></td><td>一个具体的 TongNCS 配置项</td><td>逻辑名、TongNCS 坐标（命名空间/分组/数据 ID）、格式、敏感性、当前 MD5</td></tr>
+            <tr><td><b>变更单</b></td><td>一次受控变更的载体</td><td>单号、标题、原因、变更前后内容、基线 MD5、风险等级、状态、关联发布</td></tr>
+            <tr><td><b>审批任务</b></td><td>分配给审批人的决策单元</td><td>审批人、结论、意见、处理时间</td></tr>
+            <tr><td><b>发布记录</b></td><td>一次真实写入 TongNCS 的结果</td><td>版本号、操作人、时间、目标 MD5、读回结果、灰度范围</td></tr>
+            <tr><td><b>灰度计划</b></td><td>灰度发布的范围与节奏</td><td>灰度方式、匹配条件、观察窗口、放量记录</td></tr>
+            <tr><td><b>定时任务</b></td><td>计划到点自动执行的发布任务</td><td>变更单、执行时间、执行状态、执行结果</td></tr>
+            <tr><td><b>同步记录</b></td><td>一次跨环境受控同步的来源与去向</td><td>源应用/环境/版本、目标应用/环境、目标变更单</td></tr>
+            <tr><td><b>审计事件</b></td><td>不可变的操作证据</td><td>事件 ID、时间、操作人、动作、对象、前后值、结果、来源 IP、TraceId、哈希</td></tr>
+            <tr><td><b>授权</b></td><td>用户/组在应用与环境上的权限</td><td>主体、应用、环境、权限点、有效期</td></tr>
+            <tr><td><b>订阅快照</b></td><td>某时刻订阅该配置的实例集合</td><td>采集时间、实例数、应用分布</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>5.2 变更单状态机</h3>
+      <div class="card">
+        <div class="sm">
+          <span class="sm-chip" data-state="草稿">草稿</span><span class="sm-arrow">→</span>
+          <span class="sm-chip" data-state="待审批">待审批</span><span class="sm-arrow">→</span>
+          <span class="sm-chip" data-state="审批中">审批中</span><span class="sm-arrow">→</span>
+          <span class="sm-chip" data-state="已通过待发布">已通过待发布</span><span class="sm-arrow">→</span>
+          <span class="sm-chip" data-state="发布中">发布中</span><span class="sm-arrow">→</span>
+          <span class="sm-chip" data-state="已发布">已发布</span>
+        </div>
+        <div class="sm-branch">
+          <span class="lab">分支状态：</span>
+          <span class="sm-chip branch" data-state="已驳回">已驳回</span>
+          <span class="sm-chip branch" data-state="发布失败">发布失败</span>
+          <span class="sm-chip branch" data-state="已回滚">已回滚</span>
+          <span class="sm-chip" data-state="已取消">已取消</span>
+          <span class="sm-chip" data-state="已过期">已过期</span>
+        </div>
+        <p class="small muted" style="margin-bottom:0">状态只能由系统按规则推进，不允许手工改状态。任何状态变化都写入审计。已驳回、已取消、已过期为终态；已发布仍可被回滚。</p>
+      </div>
+
+      <h3>5.3 状态迁移规则</h3>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th style="width:150px">当前状态</th><th style="width:180px">动作</th><th style="width:150px">目标状态</th><th>触发条件 / 约束</th></tr></thead>
+          <tbody>
+            <tr><td>草稿</td><td>提交审批</td><td>待审批</td><td>必填项完整、格式校验通过、存在可用审批人</td></tr>
+            <tr><td>待审批</td><td>审批人接单</td><td>审批中</td><td>审批人具备该应用/环境权限</td></tr>
+            <tr><td>审批中</td><td>审批人通过</td><td>已通过待发布</td><td>生产为单人会签，1 名审批人通过即可；审批期间基线未变化</td></tr>
+            <tr><td>审批中</td><td>审批人驳回</td><td>已驳回</td><td>必须填写驳回理由</td></tr>
+            <tr><td>已通过待发布</td><td>开始发布</td><td>发布中</td><td>发布窗口内、MD5 与基线一致、TongNCS 可用</td></tr>
+            <tr><td>发布中</td><td>写入并读回一致</td><td>已发布</td><td>读回内容 MD5 与目标一致</td></tr>
+            <tr><td>发布中</td><td>写入失败 / 读回不一致</td><td>发布失败</td><td>禁止自动重试，需人工确认</td></tr>
+            <tr><td>已发布</td><td>回滚</td><td>已回滚</td><td>发布者执行；更早版本需重新审批</td></tr>
+            <tr><td>已通过待发布</td><td>基线变化</td><td>待审批</td><td>需重新确认 Diff 并再次审批</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 6 核心流程 -->
+    <section id="flows">
+      <div class="sec-head"><span class="sec-no">06</span><h2>核心流程</h2></div>
+      <p class="sec-sub">五条流程覆盖正常、计划发布、绕行检测、回退恢复与失败重试。</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h4>6.1 标准变更</h4>
+          <ol class="small">
+            <li>配置编辑者在配置详情发起变更，填写原因与计划时间。</li>
+            <li>系统计算 Diff、影响面与风险等级，编辑者确认后提交。</li>
+            <li>审批人收到待办，查看 Diff 与影响面，通过或驳回。</li>
+            <li>审批通过后，发布者手动执行发布，或由定时任务到点执行。</li>
+            <li>平台写入 TongNCS、读回校验、记录发布记录与审计。</li>
+            <li>通知相关人，变更单进入已发布。</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h4>6.2 计划发布与发布窗口</h4>
+          <ol class="small">
+            <li>提交变更单时可填写计划发布时间，用于审批排序与提醒；审批通过后也可直接设为"到点自动发布"。</li>
+            <li>定时任务到点执行前重新校验：审批仍有效、基线 MD5 一致、发布窗口允许、TongNCS 可用；任一不满足则转回"待发布"并告警，不自动重试。</li>
+            <li>发布窗口按环境配置，默认全天开放；窗口外不允许发布，定时任务同样受限。</li>
+            <li>不提供紧急发布通道；调整发布窗口只能由平台管理员操作，调整本身记录审计。</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h4>6.3 直连 TongNCS 变更检测</h4>
+          <ol class="small">
+            <li>平台按固定周期（默认 5 分钟）拉取 TongNCS 配置变更历史 <span class="pill assume">Assumption, TBD</span>。</li>
+            <li>与平台发布记录按配置与时间比对。</li>
+            <li>发现无对应发布记录的变更，生成"未授权变更"审计事件。</li>
+            <li>立即报警：企业微信群机器人 + 站内通知，并在群内 @ 应用负责人；同时在配置详情打标。</li>
+            <li>支持人工"补录说明"，但报警记录与事件本身不可删除。</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h4>6.4 回滚与误删恢复</h4>
+          <ol class="small">
+            <li>发布者从发布记录选择目标版本；回滚到上一已发布版本可直接执行并填写原因，回滚到更早版本需重新审批。</li>
+            <li>执行写 TongNCS 与读回校验，生成新的发布记录；原变更单标记已回滚并关联回滚记录。</li>
+            <li>删除类变更通过后执行软删除：从 TongNCS 删除，平台回收站保留完整内容 30 天。</li>
+            <li>恢复时把原内容重新写入 TongNCS，读回校验通过后标记已恢复；恢复生成新的发布记录与审计。</li>
+            <li>超过 30 天的回收站条目不可恢复。</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <h4>6.5 发布失败与重试</h4>
+        <p class="small" style="margin-top:0">发布失败后变更单进入"发布失败"，不自动重试，避免重复写入造成抖动。发布者需先核对 TongNCS 当前值：</p>
+        <ul class="small">
+          <li>若目标值已生效：标记"实际成功"，补记发布记录，保留失败证据。</li>
+          <li>若目标值未生效：可重新执行发布，沿用同一变更单与幂等键。</li>
+          <li>若当前值被第三方改动：需重新创建变更单，基于新基线重新审批。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 7 功能需求 -->
+    <section id="fr">
+      <div class="sec-head"><span class="sec-no">07</span><h2>功能需求</h2></div>
+      <p class="sec-sub">P0 共 12 项。每项固定描述目的、触发、处理规则、结果与状态、权限、异常。</p>
+
+      <!-- FR-01 -->
+      <article class="fr" id="fr-01">
+        <div class="fr-head"><span class="fr-no">FR-01</span><h3>配置目录与详情</h3><span class="pill p0">P0</span></div>
+        <div class="fr-body">
+          <dl class="kv"><dt>目的</dt><dd>让用户按"应用—环境"找到配置，而不是记忆 Namespace/Group/DataId 原始坐标，并在同一页面看到治理状态。</dd></dl>
+          <dl class="kv"><dt>触发</dt><dd>用户进入平台选择应用与环境；或从通知、审计事件、变更单、发布记录跳转。</dd></dl>
+          <dl class="kv"><dt>处理规则</dt><dd>
+            <ul>
+              <li>目录树为：应用 → 环境 → 配置分组 → 配置项；映射关系由平台维护，一个 TongNCS 配置只能归属一个应用与环境，冲突时阻断保存。</li>
+              <li>详情页展示：当前生效内容（实时读取 TongNCS）、最近发布记录、订阅实例数与分布、进行中的变更单、最近审计事件。</li>
+              <li>未纳入映射的 TongNCS 配置进入"未纳管"清单，按数量与存在时长提示管理员。</li>
+              <li>敏感配置的值默认脱敏，只显示字段名与是否已设置。</li>
+            </ul>
+          </dd></dl>
+          <dl class="kv"><dt>结果与状态</dt><dd>配置标记为"已纳管 / 未纳管 / 已失效"。TongNCS 不可用时展示最后一次成功读取的快照，并明确标注"可能过期"。</dd></dl>
+          <dl class="kv"><dt>权限</dt><dd>只读观察者及以上可查看目录与普通配置；敏感值需"查看敏感配置"权限，且每次查看需填写原因并记录审计。</dd></dl>
+          <dl class="kv"><dt>异常</dt><dd>TongNCS 超时 → 降级为快照并标注时间；配置在 TongNCS 已被删除 → 标记"已失效"但保留历史与审计；映射缺失 → 提示补建映射。</dd></dl>
+
+          <div class="demo">
+            <div class="demo-head"><span class="dot"></span><b>交互演示 · 治理工作台</b><span class="hint">点击标签切换</span></div>
+            <div class="tabs">
+              <button class="tab active" data-tab="todo">我的待办<span class="cnt">3</span></button>
+              <button class="tab" data-tab="release">待发布<span class="cnt">2</span></button>
+              <button class="tab" data-tab="drift">漂移告警<span class="cnt">1</span></button>
+            </div>
+            <div>
+              <div data-tabpane="todo">
+                <div class="task"><span class="tag hot">高风险</span><div class="grow">order-service · prod · 连接池上限调整<div class="s">CR-20261121-0042 · 提交人 zhang.wei · 2 小时前</div></div><span class="pill warn">待审批</span></div>
+                <div class="task"><span class="tag">常规</span><div class="grow">payment-service · prod · 网关超时时间<div class="s">CR-20261121-0040 · 提交人 wang.fang · 4 小时前</div></div><span class="pill warn">待审批</span></div>
+                <div class="task"><span class="tag">常规</span><div class="grow">inventory-service · staging · 缓存 TTL<div class="s">CR-20261120-0038 · 提交人 li.qiang · 昨天</div></div><span class="pill warn">待审批</span></div>
+              </div>
+              <div data-tabpane="release" class="hidden">
+                <div class="task"><span class="tag">已通过</span><div class="grow">order-service · prod · 新增功能开关<div class="s">CR-20261121-0039 · 审批人 li.na · 今日 16:00 计划发布</div></div><span class="pill info">待发布</span></div>
+                <div class="task"><span class="tag">已通过</span><div class="grow">user-center · staging · 日志级别<div class="s">CR-20261121-0036 · 审批人 admin.wang · 今日 18:00 计划发布</div></div><span class="pill info">待发布</span></div>
+              </div>
+              <div data-tabpane="drift" class="hidden">
+                <div class="task"><span class="tag hot">未授权</span><div class="grow">payment-service · prod · 检测到直连 TongNCS 修改<div class="s">2026-11-21 13:47 · 操作人 li.qiang · 来源 TongNCS 控制台</div></div><span class="pill danger">需核实</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- FR-02 -->
+      <article class="fr" id="fr-02">
+        <div class="fr-head"><span class="fr-no">FR-02</span><h3>变更单与 Diff</h3><span class="pill p0">P0</span></div>
+        <div class="fr-body">
+          <dl class="kv"><dt>目的</dt><dd>把"改配置"从直接写 TongNCS 变成有原因、有差异、有基线、可审批的变更单。</dd></dl>
+          <dl class="kv"><dt>触发</dt><dd>用户在配置详情点击"发起变更"；从模板创建；从其他环境复制内容（P1 支持一键同步）。</dd></dl>
+          <dl class="kv"><dt>处理规则</dt><dd>
+            <ul>
+              <li>变更单必填：标题、变更原因、目标配置、变更类型（新增/修改/删除）、变更后内容、计划发布时间；风险等级由系统计算，用户只能上调不能下调。</li>
+              <li>内容编辑保存为平台草稿，草稿<b>不写入 TongNCS</b>，也不影响运行时。</li>
+              <li>Diff 以行为单位展示新增、删除、未变；敏感字段两侧都脱敏。</li>
+              <li>同一配置同一时刻只允许一个"进行中"变更单（草稿不占用）；存在进行中变更单时，其他人只能查看或申请协作。</li>
+              <li>提交时记录 TongNCS 当前内容 MD5 作为基线；发布前再次校验，不一致则阻断并要求重新比对。</li>
+              <li>删除类变更必须单独确认，并在影响面中列出订阅实例；删除为软删除，平台保留完整内容 30 天，可在回收站恢复，超过 30 天不可恢复。</li>
+            </ul>
+          </dd></dl>
+          <dl class="kv"><dt>结果与状态</dt><dd>草稿 → 待审批；生成变更单号。变更单内容与影响面以提交时快照为准，后续 TongNCS 变化不回写已提交快照。删除类变更发布后，配置进入"已删除（可恢复）"，同时出现在回收站。</dd></dl>
+          <dl class="kv"><dt>权限</dt><dd>配置编辑者可创建与编辑自己的草稿；他人草稿只读；删除草稿仅本人或平台管理员；提交权限与编辑权限同域。</dd></dl>
+          <dl class="kv"><dt>异常</dt><dd>基线已变化 → 展示"当前值 / 基线值 / 你的修改"三方对比；内容超限（默认 1 MB）→ 阻断并提示拆分 <span class="pill assume">Assumption, TBD</span>；格式校验失败 → 定位到行并阻断提交；必填缺失 → 不允许提交。</dd></dl>
+
+          <div class="demo">
+            <div class="demo-head"><span class="dot"></span><b>交互演示 · 变更单向导</b><span class="hint">4 步完成提交，可模拟审批与发布</span></div>
+            <div id="wiz">
+              <div class="wsteps" id="wizSteps">
+                <div class="wstep active" data-step="1"><span class="idx">1</span>选择配置</div>
+                <div class="wstep" data-step="2"><span class="idx">2</span>编辑与差异</div>
+                <div class="wstep" data-step="3"><span class="idx">3</span>影响与风险</div>
+                <div class="wstep" data-step="4"><span class="idx">4</span>确认提交</div>
+              </div>
+
+              <div id="wizPanels">
+                <div class="wpanel" data-panel="1">
+                  <div class="row-2">
+                    <div class="field"><label>应用</label><select><option>order-service</option><option>payment-service</option><option>inventory-service</option></select></div>
+                    <div class="field"><label>环境</label><select><option>prod（生产）</option><option>staging（预发）</option><option>dev（开发）</option></select></div>
+                  </div>
+                  <div class="field"><label>配置</label><select><option>order-service.properties</option><option>order-service-gray.properties</option></select></div>
+                  <div class="field"><label>变更标题</label><input value="调整数据库连接池上限与缓存 TTL"></div>
+                </div>
+
+                <div class="wpanel hidden" data-panel="2">
+                  <div class="field">
+                    <label>变更后内容（YAML / Properties / JSON / 纯文本）</label>
+                    <textarea id="newCfg" spellcheck="false"></textarea>
+                  </div>
+                  <div class="field" style="margin-bottom:0">
+                    <label>与 TongNCS 当前值（基线）的差异</label>
+                    <div class="diff" id="diffOutput"></div>
+                  </div>
+                </div>
+
+                <div class="wpanel hidden" data-panel="3">
+                  <div class="impact">
+                    <div class="ic"><div class="v" id="impactChanged">0</div><div class="t">Diff 变更行</div></div>
+                    <div class="ic"><div class="v">12</div><div class="t">订阅实例</div></div>
+                    <div class="ic"><div class="v">3</div><div class="t">受影响应用</div></div>
+                    <div class="ic"><div class="v">0</div><div class="t">敏感字段</div></div>
+                  </div>
+                  <div class="riskbar" id="riskBar"><b>风险等级：中</b> · 生产环境 + 连接池参数变更，由 1 名审批人单人会签。</div>
+                  <p class="small muted" style="margin:8px 0 0">受影响负责人：wang.fang（order-service）、li.na（payment-service）、chen.hao（inventory-service）。</p>
+                  <div class="field" style="margin-top:12px;margin-bottom:0">
+                    <label>影响说明（审批人可见）</label>
+                    <textarea style="min-height:76px" spellcheck="false">调整连接池上限从 20 到 50，缓解高峰期连接等待；缓存 TTL 从 300 秒提升到 600 秒。功能开关保持关闭，仅新增灰度比例字段，暂不启用。</textarea>
+                  </div>
+                </div>
+
+                <div class="wpanel hidden" data-panel="4">
+                  <div class="card" style="box-shadow:none;margin:0">
+                    <h4>提交前确认</h4>
+                    <table class="tbl">
+                      <tbody>
+                        <tr><th style="width:110px">应用 / 环境</th><td>order-service · prod</td></tr>
+                        <tr><th>配置</th><td>order-service.properties</td></tr>
+                        <tr><th>变更类型</th><td>修改</td></tr>
+                        <tr><th>风险等级</th><td><span class="pill warn">中</span> · 生产环境</td></tr>
+                        <tr><th>基线校验</th><td><span class="pill ok">MD5 一致</span> · 提交时再次校验</td></tr>
+                        <tr><th>审批要求</th><td>生产单人会签：1 名审批人；提交人不得审批自己的变更单</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div class="cr-actions">
+                <button class="btn" id="btnPrev" disabled>上一步</button>
+                <button class="btn primary" id="btnNext">下一步</button>
+              </div>
+            </div>
+
+            <div id="crPanel" class="cr hidden">
+              <div class="cr-top">
+                <span class="cr-id" id="crId">CR-20261121-0043</span>
+                <span class="pill info">order-service · prod</span>
+                <span class="pill warn" id="crStatePill"><span id="crState">草稿</span></span>
+              </div>
+              <div class="sm" id="smStrip">
+                <span class="sm-chip" data-state="草稿">草稿</span><span class="sm-arrow">→</span>
+                <span class="sm-chip" data-state="待审批">待审批</span><span class="sm-arrow">→</span>
+                <span class="sm-chip" data-state="审批中">审批中</span><span class="sm-arrow">→</span>
+                <span class="sm-chip" data-state="已通过待发布">已通过待发布</span><span class="sm-arrow">→</span>
+                <span class="sm-chip" data-state="发布中">发布中</span><span class="sm-arrow">→</span>
+                <span class="sm-chip" data-state="已发布">已发布</span>
+              </div>
+              <div class="sm-branch">
+                <span class="lab">分支状态：</span>
+                <span class="sm-chip branch" data-state="已驳回">已驳回</span>
+                <span class="sm-chip branch" data-state="发布失败">发布失败</span>
+                <span class="sm-chip branch" data-state="已回滚">已回滚</span>
+              </div>
+              <div class="cr-actions">
+                <button class="btn ok" id="btnApprove">模拟审批通过</button>
+                <button class="btn danger" id="btnReject">模拟驳回</button>
+                <button class="btn primary" id="btnRelease">模拟发布</button>
+                <button class="btn" id="btnRollback">模拟回滚</button>
+                <button class="btn ghost" id="btnReset">重置演示</button>
+              </div>
+              <div class="log" id="crLog"><div class="log-empty">暂无操作记录。提交后将显示状态流转与审计记录。</div></div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- FR-03 -->
+      <article class="fr" id="fr-03">
+        <div class="fr-head"><span class="fr-no">FR-03</span><h3>审批中心</h3><span class="pill p0">P0</span></div>
+        <div class="fr-body">
+          <dl class="kv"><dt>目的</dt><dd>让审批人在一个地方处理所有待办，并确保"提交的人不能自己批"。</dd></dl>
+          <dl class="kv"><dt>触发</dt><dd>变更单提交；审批人打开待办。</dd></dl>
+          <dl class="kv"><dt>处理规则</dt><dd>
+            <ul>
+              <li>待办按风险等级与等待时长排序；可批量浏览，但必须逐单决策。</li>
+              <li>审批页面同时展示：变更单信息、完整 Diff、影响面、该配置历史发布与回滚记录、提交人。</li>
+              <li>审批动作：通过、驳回（必须填理由）、转交（被转交人须具备审批权限）。</li>
+              <li>生产环境强制"提交人 ≠ 审批人"，并强制"发布人 ≠ 审批人"；唯一例外：发布人是该应用的应用负责人。</li>
+              <li>生产环境统一为单人会签：1 名审批人通过即可；高风险变更强制由应用负责人审批。</li>
+              <li>审批通过后进入"已通过待发布"，持续有效，直到基线变化、变更单被取消或已发布；不设审批等待超时与自动驳回。</li>
+              <li>审批期间基线变化：变更单退回"待审批"，已完成的审批意见保留但需重新确认。</li>
+            </ul>
+          </dd></dl>
+          <dl class="kv"><dt>结果与状态</dt><dd>待审批 → 审批中 → 已通过待发布 / 已驳回。全程写审计。</dd></dl>
+          <dl class="kv"><dt>权限</dt><dd>审批人只能处理其授权应用与环境范围内的变更单；不能审批自己提交的单；高风险变更仅应用负责人可审批。</dd></dl>
+          <dl class="kv"><dt>异常</dt><dd>无可用审批人 → 升级至应用负责人并告警；审批人离职或账号禁用 → 管理员可批量转交；不做审批超时判断，也不自动驳回。</dd></dl>
+        </div>
+      </article>
+
+      <!-- FR-04 -->
+      <article class="fr" id="fr-04">
+        <div class="fr-head"><span class="fr-no">FR-04</span><h3>发布与灰度</h3><span class="pill p0">P0</span></div>
+        <div class="fr-body">
+          <dl class="kv"><dt>目的</dt><dd>在审批通过后，把内容安全写入 TongNCS，并让灰度过程可观察、可回退。</dd></dl>
+          <dl class="kv"><dt>触发</dt><dd>发布者点击发布；到达计划发布时间（定时发布）；灰度观察期结束触发提示。</dd></dl>
+          <dl class="kv"><dt>处理规则</dt><dd>
+            <ul>
+              <li>发布前预检：变更单处于"已通过待发布"、未因基线变化被打回、基线 MD5 一致、发布者有目标环境权限、TongNCS 连接可用、服务账号权限足够。</li>
+              <li>通过 TongNCS 提供的配置发布能力写入；写入成功后<b>立即读回</b>并比对内容 MD5，不一致视为发布失败。</li>
+              <li>灰度复用 TongNCS 的 Beta / Tag 能力；平台记录灰度方式、匹配条件、观察窗口、放量与转全量操作。</li>
+              <li>灰度期间变更单保持"发布中（灰度）"；转全量并读回一致后才进入"已发布"。</li>
+              <li>发布幂等：同一变更单 + 同一目标版本只允许一次有效写入；重复点击直接返回既有发布记录。</li>
+              <li>计划发布时间可手动触发，也可设为到点自动发布；发布窗口按环境配置且默认全天，窗口外不允许发布；不提供紧急发布通道。</li>
+            </ul>
+          </dd></dl>
+          <dl class="kv"><dt>结果与状态</dt><dd>已通过待发布 → 发布中 → 已发布 / 发布失败；灰度中为发布中的子状态。生成发布记录（版本号、操作人、目标 MD5、读回结果、灰度范围）。</dd></dl>
+          <dl class="kv"><dt>权限</dt><dd>发布者需目标环境发布权限；灰度放量与转全量同权限；发布窗口由平台管理员配置，调整记录审计。</dd></dl>
+          <dl class="kv"><dt>异常</dt><dd>写入成功但读回失败 → 标记"结果不确定"，禁止自动重试，提示人工核对；部分实例未收到推送 → 展示订阅快照差异并告警；TongNCS 不可用 → 阻断发布；灰度无匹配实例 → 阻断转全量并提示检查匹配条件；窗口外发布 → 阻断并提示可用窗口。</dd></dl>
+        </div>
+      </article>
+
+      <!-- FR-05 -->
+      <article class="fr" id="fr-05">
+        <div class="fr-head"><span class="fr-no">FR-05</span><h3>全量操作审计</h3><span class="pill p0">P0</span></div>
+        <div class="fr-body">
+          <dl class="kv"><dt>目的</dt><dd>覆盖"谁在何时对哪个对象做了什么、结果如何"，可检索、可导出、可举证，并能发现绕过平台的直连变更。</dd></dl>
+          <dl class="kv"><dt>触发</dt><dd>任何写操作、审批、授权、导出、敏感值查看、连接配置修改、配置删除与恢复、直连检测事件自动记录；用户主动查询或导出。</dd></dl>
+          <dl class="kv"><dt>处理规则</dt><dd>
+            <ul>
+              <li>审计范围：变更单创建/编辑/提交/审批/发布/回滚/取消、配置删除与恢复、权限授予与回收、账号创建与禁用、登录、敏感值查看、审计导出、TongNCS 连接与映射修改、直连变更检测。</li>
+              <li>每条事件包含：事件 ID、时间、操作人、来源 IP、动作、对象、变更前后值（脱敏）、结果、TraceId、关联变更单、哈希。</li>
+              <li>只追加，不支持编辑或删除；按日生成哈希链，导出文件附带校验值。</li>
+              <li>审计事件永久保留，不自动删除、不允许单条或批量删除；仅支持按条件查询与导出。</li>
+              <li>查询维度：时间范围、动作、应用、环境、操作人、结果、关键字；导出为异步任务。</li>
+              <li>直连检测：定时比对 TongNCS 配置历史与平台发布记录，无对应记录的变更记为"未授权变更"，并立即报警到企业微信群与站内，同时通知应用负责人与审计员。</li>
+            </ul>
+          </dd></dl>
+          <dl class="kv"><dt>结果与状态</dt><dd>审计事件只增不改、永久保留；导出任务状态为生成中 / 可下载 / 失败 / 已过期。</dd></dl>
+          <dl class="kv"><dt>权限</dt><dd>审计员与平台管理员可查看全部；普通用户仅查看与自己相关的审计；导出需"审计导出"权限。</dd></dl>
+          <dl class="kv"><dt>异常</dt><dd>审计写入失败 → 阻断对应业务操作（审计优先）；导出数据过大 → 异步分片并限速；TongNCS 历史被清理导致比对缺口 → 标注"检测盲区"并提示缩短检测周期；企业微信报警发送失败 → 重试并降级站内，同时通知平台管理员。</dd></dl>
+
+          <div class="demo">
+            <div class="demo-head"><span class="dot"></span><b>交互演示 · 审计中心</b><span class="hint">筛选 + 搜索 + 点击行查看详情</span></div>
+            <div class="filters" id="auditFilters">
+              <button class="filter active" data-filter="全部">全部</button>
+              <button class="filter" data-filter="发布">发布</button>
+              <button class="filter" data-filter="审批">审批</button>
+              <button class="filter" data-filter="回滚">回滚</button>
+              <button class="filter" data-filter="权限变更">权限变更</button>
+              <button class="filter" data-filter="直连变更">直连变更</button>
+              <button class="filter" data-filter="导出">导出</button>
+              <button class="filter" data-filter="查看敏感值">查看敏感值</button>
+            </div>
+            <input class="search" id="auditSearch" placeholder="搜索操作人、应用、配置或事件 ID…">
+            <div class="tbl-wrap" style="box-shadow:none">
+              <table class="audit-table">
+                <thead><tr><th style="width:142px">时间</th><th style="width:92px">动作</th><th style="width:96px">操作人</th><th>对象</th><th style="width:72px">结果</th><th style="width:106px">来源</th></tr></thead>
+                <tbody id="auditBody"></tbody>
+              </table>
+            </div>
+            <p class="small muted" style="margin:8px 0 0">共 <b id="auditCount">0</b> 条匹配事件。审计永久保留；浅红底为直连 TongNCS 产生的未授权变更，会同步在企业微信群报警。</p>
+            <div class="ad hidden" id="auditDetail"></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- FR-06 -->
+      <article class="fr" id="fr-06">
+        <div class="fr-head"><span class="fr-no">FR-06</span><h3>权限与授权</h3><span class="pill p0">P0</span></div>
+        <div class="fr-body">
+          <dl class="kv"><dt>目的</dt><dd>用"应用 × 环境"的业务语义授权，弥补 TongNCS 原生 RBAC 与组织职责之间的差距。</dd></dl>
+          <dl class="kv"><dt>触发</dt><dd>管理员创建或禁用账号；管理员授权；人员入转调离；临时项目授权到期；应用负责人移交。</dd></dl>
+          <dl class="kv"><dt>处理规则</dt><dd>
+            <ul>
+              <li>P0 使用平台自建账号：管理员创建、密码策略、启用/禁用、离职冻结；SSO 接入需评估，列为 P1，不在 P0 上线。</li>
+              <li>平台权限点：查看、编辑、提交、审批、发布、回滚、查看敏感值、查看审计、导出审计、平台管理。</li>
+              <li>授权主体：用户或用户组；授权范围：应用 × 环境；支持角色模板（只读、编辑者、发布者、审批人、负责人）批量套用。</li>
+              <li>平台权限与 TongNCS 服务账号权限需同时满足；调用 TongNCS 使用受控服务账号，不使用个人 TongNCS 凭证。</li>
+              <li>支持临时授权与到期自动回收；回收权限不影响已发布配置，但立即阻断后续操作。</li>
+              <li>职责分离作为硬约束：同一变更单提交人不得审批；发布人不得与审批人相同，唯一例外是发布人为该应用负责人。</li>
+            </ul>
+          </dd></dl>
+          <dl class="kv"><dt>结果与状态</dt><dd>授权状态：生效 / 已回收 / 已过期；账号状态：启用 / 禁用 / 已冻结。每次变更记录审计。</dd></dl>
+          <dl class="kv"><dt>权限</dt><dd>平台管理员可创建、禁用账号并全局授权；应用负责人只能授权其负责应用范围内的角色（不可授予平台管理）。</dd></dl>
+          <dl class="kv"><dt>异常</dt><dd>服务账号权限不足 → 发布预检直接报错并指出缺失动作；权限缓存异常 → 默认拒绝（fail-closed）；连续登录失败达到阈值 → 锁定账号；账号被禁用 → 立即阻断登录，名下未完成变更单需转交。</dd></dl>
+        </div>
+      </article>
+
+      <!-- FR-07 -->
+      <article class="fr" id="fr-07">
+        <div class="fr-head"><span class="fr-no">FR-07</span><h3>影响面与风险提示</h3><span class="pill p0">P0</span></div>
+        <div class="fr-body">
+          <dl class="kv"><dt>目的</dt><dd>在提交、审批、发布前，让决策者知道"这次改动会影响谁、最坏会怎样"。</dd></dl>
+          <dl class="kv"><dt>触发</dt><dd>变更单编辑、提交、审批、发布各环节自动计算并刷新展示。</dd></dl>
+          <dl class="kv"><dt>处理规则</dt><dd>
+            <ul>
+              <li>影响面数据：订阅该配置的实例数、所属应用与负责人（来自 TongNCS 监听查询快照）；订阅实例可稳定映射到应用与负责人，映射结果同时作为通知对象。</li>
+              <li>同分组关联配置与已维护的上游依赖纳入影响面 <span class="pill assume">Assumption, TBD</span>。</li>
+              <li>风险因子：生产环境、敏感配置、删除操作、Diff 规模、影响实例数、该配置近期失败或回滚记录、非工作时间发布。</li>
+              <li>风险等级为低 / 中 / 高，由规则加权得出；用户可上调不可下调；高风险变更强制由应用负责人单人会签。</li>
+              <li>同时展示"发布失败会怎样"与"回滚路径是否可用"。</li>
+            </ul>
+          </dd></dl>
+          <dl class="kv"><dt>结果与状态</dt><dd>风险评估随变更单提交形成快照；快照不因后续 TongNCS 数据变化而改变，但详情页可显示"最新影响面"作为对照。</dd></dl>
+          <dl class="kv"><dt>权限</dt><dd>可查看变更单的人均可看到风险结论；实例与依赖明细需配置查看权限。</dd></dl>
+          <dl class="kv"><dt>异常</dt><dd>监听查询不可用 → 显示"未知"并自动把风险上调一级；订阅快照过期 → 标注采集时间；无订阅实例 → 提示"可能无人使用或采集异常"，需人工确认。</dd></dl>
+        </div>
+      </article>
+
+      <!-- FR-08 -->
+      <article class="fr" id="fr-08">
+        <div class="fr-head"><span class="fr-no">FR-08</span><h3>回滚与删除恢复</h3><span class="pill p0">P0</span></div>
+        <div class="fr-body">
+          <dl class="kv"><dt>目的</dt><dd>在发布引发异常时快速恢复到已知良好版本；配置被误删时可在 30 天内恢复，并留下完整证据。</dd></dl>
+          <dl class="kv"><dt>触发</dt><dd>发布后发现异常；配置被软删除后需要恢复；监控告警联动（P1）；用户主动回滚。</dd></dl>
+          <dl class="kv"><dt>处理规则</dt><dd>
+            <ul>
+              <li>回滚目标：平台发布记录中的任意版本，或 TongNCS 历史版本。</li>
+              <li>回滚到"上一已发布版本"：发布者可直接执行，必须填写原因，事后审计 <span class="pill assume">Assumption, TBD</span>。</li>
+              <li>回滚到更早版本：创建回滚变更单，重新走审批。</li>
+              <li>回滚同样执行写入 TongNCS + 读回校验；生成新的发布记录，不覆盖原记录。</li>
+              <li>删除的配置进入回收站保留 30 天；恢复时把原内容重新写入 TongNCS 并读回校验，生成新的发布记录与审计。</li>
+              <li>恢复需发布权限；若同名配置已存在，必须选择覆盖（重新走审批）或放弃恢复，不允许静默覆盖。</li>
+              <li>原变更单标记"已回滚"并关联回滚记录；回滚与恢复本身也进入审计。</li>
+            </ul>
+          </dd></dl>
+          <dl class="kv"><dt>结果与状态</dt><dd>已回滚 / 已恢复；回收站条目状态：可恢复 / 已过期。失败时保持原状态并高优告警，不允许静默失败。</dd></dl>
+          <dl class="kv"><dt>权限</dt><dd>回滚与恢复权限独立于编辑权限；生产操作需发布权限；跨应用回滚不允许。</dd></dl>
+          <dl class="kv"><dt>异常</dt><dd>目标版本内容已不存在 → 阻断并提示选择其他版本；超过 30 天 → 不可恢复；恢复时同名冲突 → 阻断并提示；回滚后订阅未更新 → 告警并展示实例差异；TongNCS 不可用 → 阻断并保留待执行意图，恢复后需人工确认再执行。</dd></dl>
+        </div>
+      </article>
+
+      <!-- FR-09 -->
+      <article class="fr" id="fr-09">
+        <div class="fr-head"><span class="fr-no">FR-09</span><h3>通知与集成</h3><span class="pill p0">P0</span></div>
+        <div class="fr-body">
+          <dl class="kv"><dt>目的</dt><dd>让相关人在正确的时间收到正确的事件，同时保证通知失败不影响主流程。</dd></dl>
+          <dl class="kv"><dt>触发</dt><dd>变更单提交、审批、发布、发布失败、回滚、定时任务执行结果、直连告警。</dd></dl>
+          <dl class="kv"><dt>处理规则</dt><dd>
+            <ul>
+              <li>P0 渠道：站内通知 + 企业微信群机器人（Webhook）；邮件与其他 IM 渠道列入 P1。</li>
+              <li>按应用与环境绑定企业微信群；直连变更报警、发布失败、定时任务失败在群内 @ 应用负责人。</li>
+              <li>通知内容包含对象、动作、结果、操作人、跳转链接；不包含敏感配置明文。</li>
+              <li>发送失败进入重试队列，最多 3 次；最终失败记录审计但不阻塞业务。</li>
+              <li>同一对象短时间内的多次事件按窗口聚合，避免通知风暴。</li>
+            </ul>
+          </dd></dl>
+          <dl class="kv"><dt>结果与状态</dt><dd>通知状态：待发送 / 已发送 / 失败 / 已聚合。</dd></dl>
+          <dl class="kv"><dt>权限</dt><dd>用户管理自己的通知偏好；平台管理员配置全局渠道与默认订阅。</dd></dl>
+          <dl class="kv"><dt>异常</dt><dd>企业微信机器人不可达或被限流 → 重试 3 次后降级站内，并通知平台管理员；机器人密钥失效 → 阻断保存并提示更新；通知模板缺少变量 → 阻断保存模板。</dd></dl>
+        </div>
+      </article>
+
+      <!-- FR-10 -->
+      <article class="fr" id="fr-10">
+        <div class="fr-head"><span class="fr-no">FR-10</span><h3>平台设置与 TongNCS 连接</h3><span class="pill p0">P0</span></div>
+        <div class="fr-body">
+          <dl class="kv"><dt>目的</dt><dd>让平台安全接入现有 TongNCS 的多环境实例，并可控地维护配置映射。</dd></dl>
+          <dl class="kv"><dt>触发</dt><dd>初次部署；新增环境或 TongNCS 实例；连接异常；映射调整。</dd></dl>
+          <dl class="kv"><dt>处理规则</dt><dd>
+            <ul>
+              <li>环境与实例一一绑定：dev / staging / prod 各自使用独立 TongNCS 实例，不允许跨环境复用同一实例；命名空间在该实例内隔离。</li>
+              <li>录入 TongNCS 地址、命名空间、认证方式；凭证加密存储，界面不回显，仅允许覆盖更新。</li>
+              <li>连接测试：读取目标命名空间的配置列表与一条样例配置，验证连通性与读写权限。</li>
+              <li>维护映射：应用 / 环境 / 逻辑配置名 ↔ 命名空间 / 分组 / 数据 ID；支持批量导入与冲突检测。</li>
+              <li>健康检查：定时探活；连续失败标记"不可用"，并联动阻断发布。</li>
+              <li>平台治理数据独立持久化，但配置生效值仍以 TongNCS 为唯一来源。</li>
+            </ul>
+          </dd></dl>
+          <dl class="kv"><dt>结果与状态</dt><dd>连接状态：已连接 / 降级 / 不可用；映射状态：生效 / 冲突 / 未映射。</dd></dl>
+          <dl class="kv"><dt>权限</dt><dd>仅平台管理员可维护连接与映射；操作全部审计。</dd></dl>
+          <dl class="kv"><dt>异常</dt><dd>凭证失效 → 告警并阻断发布；一个 TongNCS 配置被映射到多个应用 → 阻断保存；环境未绑定实例 → 阻断该环境的发布；连接恢复后不自动补发，需人工确认。</dd></dl>
+        </div>
+      </article>
+
+      <!-- FR-11 -->
+      <article class="fr" id="fr-11">
+        <div class="fr-head"><span class="fr-no">FR-11</span><h3>多环境对比与受控同步</h3><span class="pill p0">P0</span></div>
+        <div class="fr-body">
+          <dl class="kv"><dt>目的</dt><dd>让同一配置在 dev / staging / prod 之间可比较、可按审批流程同步，减少手工复制造成的环境漂移。</dd></dl>
+          <dl class="kv"><dt>触发</dt><dd>用户在配置详情选择"环境对比"；或选择"同步到其他环境"。</dd></dl>
+          <dl class="kv"><dt>处理规则</dt><dd>
+            <ul>
+              <li>对比以"逻辑配置"为锚点，分别读取各环境 TongNCS 实例的当前内容；对比过程只读，不写任何环境。</li>
+              <li>差异按行展示"仅源环境存在 / 仅目标环境存在 / 内容不同"；敏感值在对比结果中同样脱敏。</li>
+              <li>同步是单向受控动作：以源环境内容生成目标环境的变更单，预填差异说明，必须走目标环境的审批与发布，不直接写目标 TongNCS。</li>
+              <li>支持同步整份内容或选中的键；目标环境已存在进行中的变更单时阻断，避免并发覆盖。</li>
+              <li>跨环境映射缺失时提示先完成配置映射；格式不一致（如 YAML 与 Properties）时阻断同步。</li>
+            </ul>
+          </dd></dl>
+          <dl class="kv"><dt>结果与状态</dt><dd>对比结果生成只读快照并可分享；同步生成目标环境变更单，并记录源环境、源版本与关联变更单。</dd></dl>
+          <dl class="kv"><dt>权限</dt><dd>查看对比需目标环境查看权限；发起同步需目标环境编辑权限；发布仍需目标环境发布权限。</dd></dl>
+          <dl class="kv"><dt>异常</dt><dd>任一环境不可用 → 标注该环境并禁止同步；三方内容均不同 → 要求人工逐项确认；源配置已被删除或未纳管 → 阻断并提示。</dd></dl>
+        </div>
+      </article>
+
+      <!-- FR-12 -->
+      <article class="fr" id="fr-12">
+        <div class="fr-head"><span class="fr-no">FR-12</span><h3>定时发布与批量变更单</h3><span class="pill p0">P0</span></div>
+        <div class="fr-body">
+          <dl class="kv"><dt>目的</dt><dd>支持计划内自动发布与一次处理多个配置，减少重复操作，同时保持逐项审批与逐项校验。</dd></dl>
+          <dl class="kv"><dt>触发</dt><dd>审批通过后设置"到点自动发布"；用户一次选择多个配置发起批量变更。</dd></dl>
+          <dl class="kv"><dt>处理规则</dt><dd>
+            <ul>
+              <li>定时发布：审批通过后设定执行时间；到点前可取消或改期，改期不重新审批，修改内容必须重新审批。</li>
+              <li>到点执行前重新校验审批状态、基线 MD5、发布窗口、TongNCS 可用性与服务账号权限；任一不满足则转回"待发布"并告警，不自动重试。</li>
+              <li>定时任务由系统账号代执行，审计同时记录系统账号与原发布人；发布记录仍归属原发布人。</li>
+              <li>批量变更单由父单与子项组成：每个子项独立 Diff、独立影响面；审批按子项最高风险执行，高风险子项由应用负责人审批。</li>
+              <li>批量发布逐项执行，允许部分成功；父单聚合展示成功、失败、未执行，可对失败子项单独重试。</li>
+              <li>单次批量上限默认 50 个配置 <span class="pill assume">Assumption, TBD</span>。</li>
+            </ul>
+          </dd></dl>
+          <dl class="kv"><dt>结果与状态</dt><dd>定时任务：待执行 / 执行中 / 已执行 / 已取消 / 执行失败；批量单：待审批 / 部分通过 / 已通过 / 部分成功 / 已发布 / 已失败。</dd></dl>
+          <dl class="kv"><dt>权限</dt><dd>定时发布需目标环境发布权限；批量变更需目标环境编辑权限，发布时逐项校验发布权限。</dd></dl>
+          <dl class="kv"><dt>异常</dt><dd>到点 TongNCS 不可用 → 任务失败并告警，不自动补发；批量部分失败 → 父单标记"部分成功"，未成功项可单独重试；审批已失效 → 不执行并通知提交人；批量中存在无权限配置 → 整单阻断并列出。</dd></dl>
+        </div>
+      </article>
+    </section>
+
+    <!-- 8 共享规则 -->
+    <section id="rules">
+      <div class="sec-head"><span class="sec-no">08</span><h2>共享规则</h2></div>
+      <p class="sec-sub">以下规则在多个功能中生效，只在此处定义一次。</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th style="width:170px">规则</th><th>定义</th></tr></thead>
+          <tbody>
+            <tr><td><b>TongNCS 唯一事实源</b></td><td>生效配置只存在于 TongNCS。平台草稿、快照、Diff 均不是运行时来源。任何"发布成功"必须经过写入 TongNCS 并读回校验。</td></tr>
+            <tr><td><b>四眼原则与单人会签</b></td><td>生产环境提交人不得审批自己的变更单；生产审批为单人会签，1 名审批人通过即可；高风险变更强制由应用负责人审批；发布人不得与审批人相同，唯一例外是发布人为该应用负责人。</td></tr>
+            <tr><td><b>审计优先</b></td><td>审计只追加、不可修改或删除；按日哈希链；审计写入失败时，对应业务操作失败，不允许"无审计的成功"。</td></tr>
+            <tr><td><b>敏感数据保护</b></td><td>敏感值默认脱敏；查看明文需单独权限 + 填写原因 + 记录审计；通知、导出、Diff 默认不含明文。</td></tr>
+            <tr><td><b>并发与幂等</b></td><td>同一配置同一时刻仅一个进行中变更单；发布使用"变更单号 + 目标版本"作为幂等键；提交与发布前均校验基线 MD5。</td></tr>
+            <tr><td><b>权限即时生效</b></td><td>授权变更实时生效；权限判断失败时默认拒绝；平台权限与 TongNCS 服务账号权限需同时满足。</td></tr>
+            <tr><td><b>账号与身份源</b></td><td>P0 使用平台自建账号，账号由管理员创建与禁用；SSO 接入需评估，列为 P1；账号禁用后立即阻断登录，历史审计保留。</td></tr>
+            <tr><td><b>通知非阻塞</b></td><td>通知失败不影响变更、审批、发布的主流程，仅记录与重试；P0 通知渠道为站内 + 企业微信群机器人。</td></tr>
+            <tr><td><b>状态一致性</b></td><td>变更单、审批任务、发布记录、审计事件通过变更单号关联；任何状态变化必须同时写审计；不允许手工改状态。</td></tr>
+            <tr><td><b>软删除与恢复</b></td><td>配置删除为软删除，平台保留完整内容 30 天；恢复需发布权限并重新写入 TongNCS、读回校验；超过 30 天不可恢复。</td></tr>
+            <tr><td><b>降级只读</b></td><td>TongNCS 不可用时平台进入只读：可查看最后快照、可编辑草稿，但禁止发布、回滚、恢复与灰度。</td></tr>
+            <tr><td><b>时间参数</b></td><td>审计永久保留；审批通过后持续有效，不设审批等待超时与自动驳回；直连检测周期 5 分钟；灰度默认观察窗口 30 分钟；软删除保留 30 天；发布窗口默认全天。审计保留与审批超时规则为已确认规则，其余为默认值 <span class="pill assume">Assumption, TBD</span>。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 9 异常与边界 -->
+    <section id="exceptions">
+      <div class="sec-head"><span class="sec-no">09</span><h2>异常与边界</h2></div>
+      <p class="sec-sub">集中列出必须定义行为的关键场景，避免实现时各自发挥。</p>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th style="width:210px">场景</th><th>产品行为</th></tr></thead>
+          <tbody>
+            <tr><td>TongNCS 不可用</td><td>展示最后一次成功快照并标注"可能过期"；阻断发布、回滚、灰度；允许编辑与保存草稿；恢复后不自动执行任何写操作。</td></tr>
+            <tr><td>审批期间基线变更</td><td>变更单退回待审批；通知提交人与已审批人；要求重新比对三方 Diff 后再次提交。</td></tr>
+            <tr><td>审批无人处理</td><td>不做超时判断、不自动驳回；仅在待办列表与站内消息中持续提示，必要时由管理员转交应用负责人。</td></tr>
+            <tr><td>发布超时 / 结果不确定</td><td>不自动重试；标记"结果不确定"；要求人工读取 TongNCS 当前值后选择"补记成功"或"重新发布"。</td></tr>
+            <tr><td>灰度无匹配实例</td><td>阻断转全量；提示检查标签与匹配条件；记录一次失败的灰度尝试。</td></tr>
+            <tr><td>定时任务到点校验失败</td><td>不执行发布，转回"待发布"并告警；不自动重试，需人工确认后重新设定或手动发布。</td></tr>
+            <tr><td>批量发布部分成功</td><td>父单标记"部分成功"；逐项展示成功与失败原因；失败子项可单独重试，不重发已成功项。</td></tr>
+            <tr><td>跨环境对比时某环境不可用</td><td>标注该环境为"不可读"，其余环境仍可对比；禁止向不可读环境发起同步。</td></tr>
+            <tr><td>回滚目标不存在</td><td>阻断回滚并提示选择其他版本；不允许以"空内容"回滚。</td></tr>
+            <tr><td>删除仍有订阅的配置</td><td>影响面明确列出实例数；删除类变更强制高风险；需负责人确认；删除后进入回收站保留 30 天。</td></tr>
+            <tr><td>恢复已删除配置</td><td>仅 30 天内可恢复；恢复需发布权限并重新写入 TongNCS、读回校验；同名配置已存在时需选择覆盖（重新审批）或放弃。</td></tr>
+            <tr><td>软删除超过 30 天</td><td>不可恢复；配置从回收站移除，保留删除审计事件。</td></tr>
+            <tr><td>账号被禁用</td><td>立即阻断登录与所有写操作；名下未完成变更单转交应用负责人；历史审计与操作记录保留。</td></tr>
+            <tr><td>企业微信群机器人不可用</td><td>重试 3 次后降级站内通知，并通知平台管理员；直连报警不可因此丢失，需在站内保留告警。</td></tr>
+            <tr><td>权限被回收</td><td>立即阻断后续操作；不影响已发布配置；进行中的变更单转交或取消。</td></tr>
+            <tr><td>导出数据过大</td><td>转异步任务并分片生成；设置单次导出上限；失败可重试，导出行为本身写审计。</td></tr>
+            <tr><td>并发提交同一配置</td><td>后提交者被阻断，提示已存在进行中变更单；可申请协作或等待关闭。</td></tr>
+            <tr><td>空状态</td><td>无应用、无配置、无待办、无审计时，分别给出下一步操作指引，不显示空白页。</td></tr>
+            <tr><td>直连变更无法比对</td><td>TongNCS 历史清理导致缺口时，标注"检测盲区"；建议缩短检测周期或调整保留策略。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 10 P1 -->
+    <section id="p1">
+      <div class="sec-head"><span class="sec-no">10</span><h2>后续增强（P1）</h2></div>
+      <p class="sec-sub">以下能力不放 P0，但架构与对象模型需预留。</p>
+      <div class="grid-2">
+        <div class="card">
+          <h4>效率与一致性</h4>
+          <ul class="small">
+            <li>配置漂移检测：实际值 vs 期望模板（Git 基线）。</li>
+            <li>配置校验策略：Schema、必填项、取值范围、引用完整性。</li>
+            <li>GitOps：以 Git 为期望态，经审批后同步到 TongNCS。</li>
+            <li>跨环境批量复制模板与定时同步任务（P0 已支持单次对比与受控同步）。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>安全与规模化</h4>
+          <ul class="small">
+            <li>对接企业 KMS / 密钥托管，敏感值不落平台明文。</li>
+            <li>SSO 单点登录接入（需先完成评估）。</li>
+            <li>指标联动自动回滚（错误率/延迟阈值触发）。</li>
+            <li>OpenAPI / Terraform Provider，供 CI/CD 受控调用。</li>
+            <li>跨环境统一治理视图与容量报表（多租户不做）。</li>
+            <li>Apollo 等配置中心迁移向导（映射、灰度、审计对齐）。</li>
+            <li>AI 资源配置治理：MCP Server、Agent、Prompt 等资源的版本与审批 <span class="pill assume">Assumption, TBD</span>。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h4>体验增强</h4>
+        <ul class="small">
+          <li>邮件、飞书 / 钉钉等其他通知渠道。</li>
+          <li>自助权限申请与到期续期。</li>
+          <li>变更风险预测：基于历史回滚率给出建议。</li>
+          <li>审计报表与合规视图（按季度/按应用导出）。</li>
+          <li>移动端审批与告警确认。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 11 决策记录 -->
+    <section id="questions">
+      <div class="sec-head"><span class="sec-no">11</span><h2>决策记录</h2></div>
+      <p class="sec-sub">所有开放问题均已确认，以下结论作为开发、验收与后续变更的基线。</p>
+
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th style="width:40px">#</th><th style="width:150px">议题</th><th>结论</th><th style="width:150px">落点</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>底层配置平台</td><td>实际为 <b>TongNCS</b>，使用体验与 Nacos 趋同；全文以 TongNCS 为准，沿用 Namespace / Group / DataId、Beta / Tag 灰度等通用术语。</td><td>全文、术语表</td></tr>
+            <tr><td>2</td><td>身份源</td><td>P0 使用平台自建账号；公司 SSO 接入需评估，列为 P1，不在首版上线。</td><td>FR-06、共享规则</td></tr>
+            <tr><td>3</td><td>生产审批</td><td><b>单人会签</b>：1 名审批人通过即可；提交人不得审批自己的变更单；<b>高风险强制由应用负责人审批</b>。</td><td>FR-03、FR-07</td></tr>
+            <tr><td>4</td><td>审计保留</td><td><b>永久保留</b>，不自动删除；仅支持查询与导出。</td><td>FR-05、共享规则</td></tr>
+            <tr><td>5</td><td>直连变更处置</td><td>直连 TongNCS 修改配置项<b>必须报警</b>：企业微信群机器人 + 站内通知，并在群内 @ 应用负责人。</td><td>FR-05、FR-09</td></tr>
+            <tr><td>6</td><td>订阅实例映射</td><td>订阅实例可<b>稳定映射</b>到应用与负责人，映射结果用于影响面展示与通知对象。</td><td>FR-07</td></tr>
+            <tr><td>7</td><td>TongNCS 部署形态</td><td><b>按环境分实例</b>：dev / staging / prod 各自独立 TongNCS 实例，环境与实例一一绑定。</td><td>FR-10、对象模型</td></tr>
+            <tr><td>8</td><td>配置删除</td><td><b>软删除</b>，平台保留完整内容 30 天，可恢复；超过 30 天不可恢复。</td><td>FR-02、FR-08</td></tr>
+            <tr><td>9</td><td>通知渠道</td><td>P0 使用<b>企业微信群机器人</b> + 站内通知；邮件与其他 IM 渠道列入 P1。</td><td>FR-09</td></tr>
+            <tr><td>10</td><td>紧急发布</td><td><b>暂不支持</b>；所有变更必须走标准审批与发布流程。</td><td>6.2、FR-04</td></tr>
+            <tr><td>11</td><td>高风险审批人</td><td><b>强制</b>由应用负责人审批；负责人不可用时须指定代理人，指定行为记录审计。</td><td>FR-03、FR-07</td></tr>
+            <tr><td>12</td><td>发布人与审批人分离</td><td><b>强制</b>"发布人 ≠ 审批人"；唯一例外：发布人为该应用的应用负责人。</td><td>FR-03、FR-06、共享规则</td></tr>
+            <tr><td>13</td><td>多租户</td><td><b>不需要</b>：平台为公司团队内部使用，采用单租户。</td><td>范围边界、FR-06</td></tr>
+            <tr><td>14</td><td>审批超时</td><td><b>不做审批超时判断</b>，也不自动驳回；仅在待办与站内持续提示，必要时人工转交。</td><td>FR-03、异常与边界</td></tr>
+            <tr><td>15</td><td>发布窗口</td><td><b>提供按环境配置</b>，默认全天开放；窗口外不允许发布，定时任务同样受限。</td><td>6.2、FR-04、FR-12</td></tr>
+            <tr><td>16</td><td>敏感值明文查看</td><td>默认授予<b>审批人与应用负责人</b>；查看须填写原因并记录审计。</td><td>FR-05、FR-06</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 12 术语表 -->
+    <section id="glossary">
+      <div class="sec-head"><span class="sec-no">12</span><h2>术语表</h2></div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th style="width:170px">术语</th><th>定义</th></tr></thead>
+          <tbody>
+            <tr><td><b>变更单</b></td><td>一次受控配置变更的载体，包含原因、内容、Diff、影响面、审批与发布结果。</td></tr>
+            <tr><td><b>发布</b></td><td>把变更单的目标内容写入 TongNCS 并读回校验成功的动作。</td></tr>
+            <tr><td><b>灰度</b></td><td>只让部分实例先收到新配置的发布方式，复用 TongNCS 的 Beta / Tag 能力。</td></tr>
+            <tr><td><b>直连变更</b></td><td>绕过平台、直接在 TongNCS 控制台或 API 修改配置的行为。</td></tr>
+            <tr><td><b>基线与基线 MD5</b></td><td>提交变更单时 TongNCS 当前内容的摘要，用于发布前确认没有被他人改动。</td></tr>
+            <tr><td><b>影响面</b></td><td>本次变更会波及的实例、应用与依赖范围。</td></tr>
+            <tr><td><b>敏感配置</b></td><td>包含口令、密钥、连接串等需要脱敏与单独授权查看的配置。</td></tr>
+            <tr><td><b>四眼原则</b></td><td>关键操作至少由两个人分别完成，避免单人独断；在本产品中体现为提交人与审批人分离。</td></tr>
+            <tr><td><b>单人会签</b></td><td>生产变更只需 1 名审批人通过即可进入待发布；该审批人不得是提交人。</td></tr>
+            <tr><td><b>软删除 / 回收站</b></td><td>删除后配置从运行时移除，平台保留完整内容 30 天；期间可恢复，超过 30 天不可恢复。</td></tr>
+            <tr><td><b>定时发布</b></td><td>审批通过后设定执行时间，由系统到点校验并自动完成发布；失败不自动重试。</td></tr>
+            <tr><td><b>批量变更单</b></td><td>包含多个子项的一次变更，父单聚合审批与发布结果，子项独立 Diff 与重试。</td></tr>
+            <tr><td><b>多环境受控同步</b></td><td>以源环境内容生成目标环境变更单，经目标环境审批与发布后生效，不直接写目标环境。</td></tr>
+            <tr><td><b>未纳管配置</b></td><td>存在于 TongNCS 但尚未建立应用/环境映射的配置。</td></tr>
+            <tr><td><b>审计哈希链</b></td><td>按日把审计事件串联计算摘要，用于证明记录未被篡改。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="footer">
+      <span>TongNCS 配置治理平台（NCG）· 产品需求文档 v1.1（范围确认版）</span>
+      <span>底层配置存储：现有 TongNCS · 不改造内核 · 不引入第二套配置存储</span>
+    </div>
+  </main>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ---------- TOC active ---------- */
+  var tocLinks = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+  var secs = tocLinks.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+  function onScroll(){
+    var pos = window.scrollY + 150;
+    var idx = 0;
+    for (var i = 0; i < secs.length; i++){
+      if (secs[i] && secs[i].offsetTop <= pos) idx = i;
+    }
+    tocLinks.forEach(function(a, i){ a.classList.toggle('active', i === idx); });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  /* ---------- Tabs ---------- */
+  Array.prototype.slice.call(document.querySelectorAll('.tabs')).forEach(function(group){
+    group.addEventListener('click', function(e){
+      var btn = e.target.closest('[data-tab]');
+      if (!btn || !group.contains(btn)) return;
+      group.querySelectorAll('[data-tab]').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      var wrap = group.parentElement;
+      wrap.querySelectorAll('[data-tabpane]').forEach(function(p){
+        p.classList.toggle('hidden', p.getAttribute('data-tabpane') !== btn.getAttribute('data-tab'));
+      });
+    });
+  });
+
+  /* ---------- Diff ---------- */
+  function diffLines(a, b){
+    var A = a.split('\n'), B = b.split('\n');
+    var n = A.length, m = B.length;
+    var dp = [];
+    for (var i = 0; i <= n; i++){
+      dp.push(new Array(m + 1).fill(0));
+    }
+    for (var i2 = n - 1; i2 >= 0; i2--){
+      for (var j2 = m - 1; j2 >= 0; j2--){
+        dp[i2][j2] = (A[i2] === B[j2])
+          ? dp[i2 + 1][j2 + 1] + 1
+          : Math.max(dp[i2 + 1][j2], dp[i2][j2 + 1]);
+      }
+    }
+    var out = [], i3 = 0, j3 = 0;
+    while (i3 < n && j3 < m){
+      if (A[i3] === B[j3]){ out.push({ type: 'same', text: A[i3] }); i3++; j3++; }
+      else if (dp[i3 + 1][j3] >= dp[i3][j3 + 1]){ out.push({ type: 'del', text: A[i3] }); i3++; }
+      else { out.push({ type: 'add', text: B[j3] }); j3++; }
+    }
+    while (i3 < n){ out.push({ type: 'del', text: A[i3++] }); }
+    while (j3 < m){ out.push({ type: 'add', text: B[j3++] }); }
+    return out;
+  }
+
+  var OLD = [
+    'spring:',
+    '  datasource:',
+    '    url: jdbc:mysql://db-prod:3306/app',
+    '    pool-size: 20',
+    '  cache:',
+    '    ttl: 300',
+    'feature:',
+    '  new-checkout: false'
+  ].join('\n');
+
+  var NEW = [
+    'spring:',
+    '  datasource:',
+    '    url: jdbc:mysql://db-prod:3306/app',
+    '    pool-size: 50',
+    '  cache:',
+    '    ttl: 600',
+    'feature:',
+    '  new-checkout: true',
+    '  new-checkout-ratio: 0.1'
+  ].join('\n');
+
+  var newCfg = document.getElementById('newCfg');
+  if (newCfg){
+    newCfg.value = NEW;
+    newCfg.addEventListener('input', function(){
+      if (wizStep === 2) renderDiff();
+    });
+  }
+
+  function renderDiff(){
+    var el = document.getElementById('diffOutput');
+    if (!el) return;
+    var rows = diffLines(OLD, newCfg ? newCfg.value : NEW);
+    el.innerHTML = rows.map(function(r){
+      var g = r.type === 'add' ? '+' : (r.type === 'del' ? '-' : ' ');
+      return '<div class="ln ' + r.type + '"><span class="g">' + g + '</span>' + esc(r.text || ' ') + '</div>';
+    }).join('');
+  }
+
+  /* ---------- Wizard ---------- */
+  var wizStep = 1;
+
+  function showWizStep(n){
+    wizStep = Math.max(1, Math.min(4, n));
+    document.querySelectorAll('#wizSteps .wstep').forEach(function(el){
+      var s = Number(el.getAttribute('data-step'));
+      el.classList.toggle('active', s === wizStep);
+      el.classList.toggle('done', s < wizStep);
+    });
+    document.querySelectorAll('#wizPanels .wpanel').forEach(function(p){
+      p.classList.toggle('hidden', Number(p.getAttribute('data-panel')) !== wizStep);
+    });
+    document.getElementById('btnPrev').disabled = (wizStep === 1);
+    document.getElementById('btnNext').textContent = (wizStep === 4) ? '提交审批' : '下一步';
+    if (wizStep === 2) renderDiff();
+    if (wizStep === 3) renderImpact();
+  }
+
+  function renderImpact(){
+    var rows = diffLines(OLD, newCfg ? newCfg.value : NEW);
+    var changed = rows.filter(function(r){ return r.type !== 'same'; }).length;
+    var el = document.getElementById('impactChanged');
+    if (el) el.textContent = changed;
+    var bar = document.getElementById('riskBar');
+    if (!bar) return;
+    var level = changed >= 9 ? '高' : (changed >= 4 ? '中' : '低');
+    bar.className = 'riskbar' + (level === '高' ? ' high' : (level === '低' ? ' low' : ''));
+    bar.innerHTML = '<b>风险等级：' + level + '</b> · ' + (level === '高'
+      ? '生产环境且改动范围较大，由应用负责人单人会签。'
+      : (level === '中'
+        ? '生产环境 + 连接池参数变更，由 1 名审批人单人会签。'
+        : '改动范围小，仍需 1 名审批人确认。'));
+  }
+
+  var crState = '草稿';
+  var crLog = [];
+
+  function nowStr(){
+    var d = new Date();
+    function p(x){ return x < 10 ? '0' + x : '' + x; }
+    return p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+  }
+
+  function addLog(msg, cls){
+    crLog.push({ t: nowStr(), m: msg, c: cls || '' });
+    var el = document.getElementById('crLog');
+    if (!el) return;
+    el.innerHTML = crLog.map(function(x){
+      return '<div class="log-item ' + x.c + '"><span class="t">' + x.t + '</span><span class="m">' + esc(x.m) + '</span></div>';
+    }).join('');
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function setCrState(s){
+    crState = s;
+    var st = document.getElementById('crState');
+    if (st) st.textContent = s;
+    var pill = document.getElementById('crStatePill');
+    if (pill){
+      pill.className = 'pill ' + (
+        s === '已发布' ? 'ok' :
+        s === '已驳回' || s === '发布失败' ? 'danger' :
+        s === '已回滚' ? 'warn' :
+        s === '已通过待发布' ? 'info' : 'warn'
+      );
+    }
+    document.querySelectorAll('#smStrip [data-state], .sm-branch [data-state]').forEach(function(el){
+      el.classList.toggle('active', el.getAttribute('data-state') === s);
+    });
+    updateCrButtons();
+  }
+
+  function updateCrButtons(){
+    var map = {
+      btnApprove: crState === '待审批',
+      btnReject: crState === '待审批' || crState === '审批中',
+      btnRelease: crState === '已通过待发布',
+      btnRollback: crState === '已发布'
+    };
+    Object.keys(map).forEach(function(id){
+      var b = document.getElementById(id);
+      if (b) b.disabled = !map[id];
+    });
+  }
+
+  function submitCr(){
+    document.getElementById('wiz').classList.add('hidden');
+    document.getElementById('crPanel').classList.remove('hidden');
+    setCrState('待审批');
+    addLog('变更单 CR-20261121-0043 已提交，等待审批', 'run');
+    addLog('审计事件已记录：变更单创建 / 提交', '');
+    var p = document.getElementById('crPanel');
+    if (p && p.scrollIntoView) p.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  var btnPrev = document.getElementById('btnPrev');
+  var btnNext = document.getElementById('btnNext');
+  if (btnPrev) btnPrev.addEventListener('click', function(){ showWizStep(wizStep - 1); });
+  if (btnNext){
+    btnNext.addEventListener('click', function(){
+      if (wizStep < 4) showWizStep(wizStep + 1);
+      else submitCr();
+    });
+  }
+
+  var btnApprove = document.getElementById('btnApprove');
+  if (btnApprove) btnApprove.addEventListener('click', function(){
+    if (crState !== '待审批') return;
+    setCrState('已通过待发布');
+    addLog('审批通过（演示审批人 li.na）：影响面已确认，允许发布', 'ok');
+  });
+
+  var btnReject = document.getElementById('btnReject');
+  if (btnReject) btnReject.addEventListener('click', function(){
+    if (crState !== '待审批' && crState !== '审批中') return;
+    setCrState('已驳回');
+    addLog('变更单被驳回（演示审批人 li.na）：请补充回滚方案', '');
+  });
+
+  var btnRelease = document.getElementById('btnRelease');
+  if (btnRelease) btnRelease.addEventListener('click', function(){
+    if (crState !== '已通过待发布') return;
+    setCrState('发布中');
+    addLog('开始发布：预检通过（基线 MD5 一致）', 'run');
+    setTimeout(function(){
+      addLog('写入 TongNCS 成功，正在读回校验…', 'run');
+      setTimeout(function(){
+        addLog('读回内容 MD5 一致，通知订阅实例…', 'run');
+        setTimeout(function(){
+          setCrState('已发布');
+          addLog('发布成功，生成发布记录 v19', 'ok');
+          addLog('审计事件已记录：发布成功 / 操作人 zhang.wei', '');
+        }, 700);
+      }, 700);
+    }, 700);
+  });
+
+  var btnRollback = document.getElementById('btnRollback');
+  if (btnRollback) btnRollback.addEventListener('click', function(){
+    if (crState !== '已发布') return;
+    setCrState('已回滚');
+    addLog('执行回滚至 v18，原因：连接池过高引发超时', 'run');
+    addLog('回滚完成，生成新的发布记录 v20；原变更单标记已回滚', 'ok');
+  });
+
+  var btnReset = document.getElementById('btnReset');
+  if (btnReset) btnReset.addEventListener('click', function(){
+    crLog = [];
+    crState = '草稿';
+    document.getElementById('crPanel').classList.add('hidden');
+    document.getElementById('wiz').classList.remove('hidden');
+    document.getElementById('crLog').innerHTML = '<div class="log-empty">暂无操作记录。提交后将显示状态流转与审计记录。</div>';
+    showWizStep(1);
+  });
+
+  if (document.getElementById('wiz')) showWizStep(1);
+
+  /* ---------- Audit ---------- */
+  var AUDIT = [
+    { id:'AUD-20261121-0187', ts:'2026-11-21 14:32:07', action:'发布', actor:'zhang.wei', role:'发布者', app:'order-service', env:'prod', target:'order-service.properties', result:'成功', source:'平台', ip:'10.20.3.41', trace:'tr-9f2c41a0', hash:'a91f7c…e2', summary:'连接池上限 20 → 50', before:'db.pool.max=20', after:'db.pool.max=50', cr:'CR-20261121-0042' },
+    { id:'AUD-20261121-0186', ts:'2026-11-21 14:28:55', action:'审批', actor:'li.na', role:'审批人', app:'order-service', env:'prod', target:'CR-20261121-0042', result:'通过', source:'平台', ip:'10.20.3.18', trace:'tr-2b81c9de', hash:'7d02aa…91', summary:'审批通过，意见：影响面已确认', before:'', after:'', cr:'CR-20261121-0042' },
+    { id:'AUD-20261121-0182', ts:'2026-11-21 13:47:12', action:'直连变更', actor:'li.qiang', role:'TongNCS 用户', app:'payment-service', env:'prod', target:'payment-service.yaml', result:'告警', source:'TongNCS 控制台', ip:'10.20.7.66', trace:'—', hash:'c4e18b…07', summary:'检测到未通过平台发布的配置变更', before:'gateway.timeout=3000', after:'gateway.timeout=5000', cr:'—', direct:true },
+    { id:'AUD-20261121-0175', ts:'2026-11-21 11:20:03', action:'权限变更', actor:'admin.wang', role:'平台管理员', app:'order-service', env:'prod', target:'用户组 order-devs', result:'成功', source:'平台', ip:'10.20.1.9', trace:'tr-7710ab3c', hash:'55d1e3…be', summary:'授予“发布者”权限', before:'—', after:'发布者', cr:'—' },
+    { id:'AUD-20261121-0169', ts:'2026-11-21 10:05:44', action:'回滚', actor:'zhang.wei', role:'发布者', app:'order-service', env:'prod', target:'order-service.properties', result:'成功', source:'平台', ip:'10.20.3.41', trace:'tr-3c9f02aa', hash:'1e77b0…4c', summary:'回滚至 v18，原因：连接池过高导致超时', before:'db.pool.max=50', after:'db.pool.max=20', cr:'CR-20261121-0038' },
+    { id:'AUD-20261120-0311', ts:'2026-11-20 19:42:18', action:'导出', actor:'audit.chen', role:'审计员', app:'全部', env:'全部', target:'审计日志 2026-11', result:'成功', source:'平台', ip:'10.20.2.33', trace:'tr-8a01fe2b', hash:'9c33da…18', summary:'导出 1–11 月审计记录（4,281 条）', before:'', after:'', cr:'—' },
+    { id:'AUD-20261120-0298', ts:'2026-11-20 16:12:37', action:'查看敏感值', actor:'li.na', role:'审批人', app:'payment-service', env:'prod', target:'payment-service.yaml', result:'成功', source:'平台', ip:'10.20.3.18', trace:'tr-6d92b7c1', hash:'2f8a11…cd', summary:'审批需要，查看数据库密码字段', before:'******', after:'******', cr:'CR-20261120-0031' },
+    { id:'AUD-20261120-0270', ts:'2026-11-20 09:31:09', action:'发布失败', actor:'zhang.wei', role:'发布者', app:'inventory-service', env:'staging', target:'inventory-service.yaml', result:'失败', source:'平台', ip:'10.20.3.41', trace:'tr-0b7e51af', hash:'81c0f2…5a', summary:'读回校验不一致，已阻断并告警', before:'cache.ttl=60', after:'cache.ttl=120', cr:'CR-20261120-0027' }
+  ];
+
+  var auditFilter = '全部';
+  var auditQuery = '';
+  var auditSelected = null;
+
+  function actionPill(a){
+    var cls = 'muted';
+    if (a === '发布') cls = 'ok';
+    else if (a === '发布失败') cls = 'danger';
+    else if (a === '审批') cls = 'info';
+    else if (a === '回滚') cls = 'warn';
+    else if (a === '直连变更') cls = 'danger';
+    else if (a === '权限变更') cls = 'purple';
+    else if (a === '查看敏感值') cls = 'warn';
+    else if (a === '导出') cls = 'muted';
+    return '<span class="pill ' + cls + '">' + a + '</span>';
+  }
+
+  function resultPill(r){
+    var cls = (r === '成功') ? 'ok' : (r === '告警' || r === '失败') ? 'danger' : 'info';
+    return '<span class="pill ' + cls + '">' + r + '</span>';
+  }
+
+  function matchFilter(r){
+    if (auditFilter === '全部') return true;
+    if (auditFilter === '发布') return r.action === '发布' || r.action === '发布失败';
+    return r.action === auditFilter;
+  }
+
+  function renderAudit(){
+    var body = document.getElementById('auditBody');
+    if (!body) return;
+    var rows = AUDIT.filter(function(r){
+      if (!matchFilter(r)) return false;
+      if (auditQuery){
+        var q = auditQuery.toLowerCase();
+        var blob = (r.id + ' ' + r.actor + ' ' + r.app + ' ' + r.env + ' ' + r.target + ' ' + r.summary).toLowerCase();
+        if (blob.indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+    body.innerHTML = rows.length ? rows.map(function(r){
+      var idx = AUDIT.indexOf(r);
+      var sel = (auditSelected === idx) ? ' selected' : '';
+      return '<tr data-idx="' + idx + '" class="' + (r.direct ? 'row-alert' : '') + sel + '">'
+        + '<td class="mono">' + r.ts + '</td>'
+        + '<td>' + actionPill(r.action) + '</td>'
+        + '<td>' + r.actor + '</td>'
+        + '<td><div>' + r.target + '</div><div class="sub">' + r.app + ' · ' + r.env + '</div></td>'
+        + '<td>' + resultPill(r.result) + '</td>'
+        + '<td class="sub">' + r.source + '</td>'
+        + '</tr>';
+    }).join('') : '<tr><td colspan="6" class="empty">没有匹配的审计事件</td></tr>';
+    var cnt = document.getElementById('auditCount');
+    if (cnt) cnt.textContent = rows.length;
+  }
+
+  function field(k, v){
+    return '<div class="ad-field"><span>' + k + '</span><b>' + esc(v) + '</b></div>';
+  }
+
+  function showAuditDetail(r){
+    var el = document.getElementById('auditDetail');
+    if (!el) return;
+    el.classList.remove('hidden');
+    el.innerHTML = ''
+      + '<div class="ad-head">'
+      + '<span class="pill ' + (r.direct ? 'danger' : 'info') + '">' + (r.direct ? '未授权变更' : '审计事件') + '</span>'
+      + '<span class="mono small muted">' + r.id + '</span>'
+      + '</div>'
+      + '<h4>' + esc(r.summary) + '</h4>'
+      + '<div class="ad-grid">'
+      + field('时间', r.ts)
+      + field('动作', r.action)
+      + field('操作人', r.actor + '（' + r.role + '）')
+      + field('应用', r.app)
+      + field('环境', r.env)
+      + field('对象', r.target)
+      + field('结果', r.result)
+      + field('来源', r.source)
+      + field('来源 IP', r.ip)
+      + field('TraceId', r.trace)
+      + field('关联变更单', r.cr)
+      + field('哈希链', r.hash)
+      + '</div>'
+      + ((r.before || r.after)
+        ? '<div class="ad-diff">'
+          + '<div><div class="lbl">变更前</div><pre>' + esc(r.before || '—') + '</pre></div>'
+          + '<div><div class="lbl">变更后</div><pre>' + esc(r.after || '—') + '</pre></div>'
+          + '</div>'
+        : '')
+      + (r.direct ? '<p class="note danger-note">该变更未经过平台发布流程，已按“未授权变更”记录并通知应用负责人。请核实来源并在 24 小时内补充说明；事件本身不可删除。</p>' : '');
+  }
+
+  var auditBody = document.getElementById('auditBody');
+  if (auditBody){
+    auditBody.addEventListener('click', function(e){
+      var tr = e.target.closest('tr');
+      if (!tr) return;
+      var idx = tr.getAttribute('data-idx');
+      if (idx === null) return;
+      auditSelected = Number(idx);
+      renderAudit();
+      showAuditDetail(AUDIT[auditSelected]);
+    });
+  }
+
+  var filters = document.getElementById('auditFilters');
+  if (filters){
+    filters.addEventListener('click', function(e){
+      var btn = e.target.closest('[data-filter]');
+      if (!btn) return;
+      filters.querySelectorAll('.filter').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      auditFilter = btn.getAttribute('data-filter');
+      renderAudit();
+    });
+  }
+
+  var search = document.getElementById('auditSearch');
+  if (search){
+    search.addEventListener('input', function(){
+      auditQuery = search.value.trim();
+      renderAudit();
+    });
+  }
+
+  if (document.getElementById('auditBody')){
+    renderAudit();
+    showAuditDetail(AUDIT[0]);
+  }
+
+  /* ---------- util ---------- */
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c];
+    });
+  }
+})();
+</script>
+</body>
+</html>

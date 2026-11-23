@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NCG · TongNCS 配置治理控制台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0B0E11; --panel:#12161B; --panel2:#171C22; --panel3:#1C2229;
+  --line:#242B33; --line2:#323C47; --text:#E7E4DC; --muted:#8B929B; --dim:#5A626C;
+  --volt:#D8FF3E; --amber:#FFB347; --red:#FF5C5C; --cyan:#6FE3FF; --green:#7CE7B2;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'Instrument Sans',system-ui,-apple-system,sans-serif;
+  --disp:'Bricolage Grotesque','Instrument Sans',sans-serif;
+  --r:3px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--ink); color:var(--text); font-family:var(--sans);
+  font-size:14px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+body::before{
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background-image:
+    radial-gradient(900px 520px at 78% -8%, rgba(216,255,62,.075), transparent 62%),
+    radial-gradient(700px 420px at 8% 108%, rgba(111,227,255,.05), transparent 60%),
+    linear-gradient(rgba(255,255,255,.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px);
+  background-size:auto,auto,42px 42px,42px 42px;
+  mask-image:linear-gradient(180deg,#000 0%,#000 70%,rgba(0,0,0,.4) 100%);
+}
+::selection{background:var(--volt);color:#0B0E11}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:#2A323C;border-radius:9px}
+::-webkit-scrollbar-thumb:hover{background:#3A4552}
+::-webkit-scrollbar-track{background:transparent}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+a{color:inherit;text-decoration:none}
+input,textarea,select{font:inherit;color:inherit;background:var(--panel2);border:1px solid var(--line2);border-radius:var(--r);padding:9px 11px;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--volt);box-shadow:0 0 0 2px rgba(216,255,62,.15)}
+.mono{font-family:var(--mono)}
+.dim{color:var(--muted)}
+.tiny{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+/* ---------- shell ---------- */
+.app{position:relative;z-index:1;height:100vh}
+.rail{
+  position:fixed;inset:0 auto 0 0;width:250px;display:flex;flex-direction:column;
+  border-right:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(18,22,27,.94),rgba(11,14,17,.98));
+  backdrop-filter:blur(14px);z-index:20;
+}
+.brand{display:flex;align-items:center;gap:11px;padding:22px 20px 18px;border-bottom:1px solid var(--line)}
+.brand-mark{
+  width:35px;height:35px;border:1px solid var(--volt);color:var(--volt);
+  display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:15px;
+  letter-spacing:-.04em;position:relative;flex:none;
+}
+.brand-mark::after{content:'';position:absolute;right:-4px;bottom:-4px;width:7px;height:7px;background:var(--volt)}
+.brand-name{font-family:var(--disp);font-weight:800;font-size:15px;letter-spacing:-.01em;line-height:1.15}
+.brand-sub{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:2px}
+nav{flex:1;overflow-y:auto;padding:14px 10px 20px}
+.nav-group{margin:14px 0 6px;padding:0 11px}
+.nav-item{
+  width:100%;display:flex;align-items:center;gap:10px;padding:9px 11px;margin:1px 0;
+  color:var(--muted);border-left:2px solid transparent;border-radius:0 3px 3px 0;text-align:left;
+  transition:color .15s,background .15s,border-color .15s;
+}
+.nav-item svg{width:15px;height:15px;flex:none;opacity:.8}
+.nav-item span{font-size:13px;font-weight:500}
+.nav-item .idx{margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.08em}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,.035)}
+.nav-item.on{color:var(--volt);border-left-color:var(--volt);background:linear-gradient(90deg,rgba(216,255,62,.09),transparent)}
+.nav-item.on svg{opacity:1}
+.rail-foot{padding:14px 18px 18px;border-top:1px solid var(--line);font-family:var(--mono);font-size:10px;color:var(--dim);display:grid;gap:6px}
+.rail-foot b{color:var(--text);font-weight:500}
+.main{margin-left:250px;height:100vh;display:flex;flex-direction:column}
+.topbar{
+  height:58px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:20px;
+  padding:0 26px;border-bottom:1px solid var(--line);
+  background:rgba(11,14,17,.72);backdrop-filter:blur(14px);position:relative;z-index:10;
+}
+.crumb{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.04em}
+.crumb b{color:var(--text);font-weight:500}
+.crumb i{color:var(--dim);font-style:normal}
+.top-right{display:flex;align-items:center;gap:14px}
+.env-switch{display:flex;border:1px solid var(--line2);border-radius:var(--r);overflow:hidden}
+.env-switch button{
+  padding:6px 11px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  border-right:1px solid var(--line2);display:flex;align-items:center;gap:6px;
+}
+.env-switch button:last-child{border-right:0}
+.env-switch button.on{background:var(--volt);color:#0B0E11;font-weight:600}
+.hdot{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px rgba(124,231,178,.8)}
+.hdot.warn{background:var(--amber);box-shadow:0 0 6px rgba(255,179,71,.8)}
+.hdot.bad{background:var(--red);box-shadow:0 0 6px rgba(255,92,92,.8)}
+.ghost{
+  border:1px solid var(--line2);padding:7px 11px;border-radius:var(--r);
+  font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  display:flex;align-items:center;gap:7px;transition:.15s;
+}
+.ghost:hover{color:var(--text);border-color:var(--volt)}
+.unread{width:6px;height:6px;border-radius:50%;background:var(--red)}
+.user{display:flex;align-items:center;gap:9px;padding-left:14px;border-left:1px solid var(--line)}
+.avatar{width:29px;height:29px;display:grid;place-items:center;background:var(--panel3);border:1px solid var(--line2);font-family:var(--disp);font-weight:600;font-size:12px;color:var(--volt)}
+.user-meta{line-height:1.2}
+.user-meta b{display:block;font-size:12px;font-weight:600}
+.user-meta span{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.08em}
+.view{flex:1;overflow-y:auto;padding:26px 30px 70px;scroll-behavior:smooth}
+
+/* ---------- primitives ---------- */
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:22px}
+.page-head h2{font-family:var(--disp);font-size:29px;font-weight:600;letter-spacing:-.02em;line-height:1.05}
+.page-head p{color:var(--muted);font-size:13px;margin-top:6px;max-width:70ch}
+.hero{display:grid;grid-template-columns:1.45fr .55fr;gap:30px;padding:8px 0 30px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:'';width:22px;height:1px;background:var(--volt)}
+.hero h1{font-family:var(--disp);font-weight:800;font-size:clamp(40px,4.4vw,64px);line-height:.92;letter-spacing:-.045em;margin:16px 0 16px}
+.hero h1 em{font-style:normal;color:var(--volt)}
+.lede{color:var(--muted);font-size:14px;max-width:60ch}
+.hero-side{display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-end;gap:10px}
+.dial{width:138px;height:138px;border-radius:50%;background:conic-gradient(var(--amber) 0 62%, #232A33 62% 100%);position:relative;display:grid;place-items:center}
+.dial::before{content:'';position:absolute;inset:9px;border-radius:50%;background:var(--ink)}
+.dial-in{position:relative;text-align:center}
+.dial-in b{display:block;font-family:var(--disp);font-size:34px;line-height:1;color:var(--amber)}
+.dial-in span{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--muted)}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+.metric{border:1px solid var(--line);background:linear-gradient(180deg,var(--panel),rgba(18,22,27,.55));padding:15px 16px 13px;position:relative;overflow:hidden;transition:.18s}
+.metric:hover{border-color:var(--line2);transform:translateY(-1px)}
+.metric::after{content:'';position:absolute;left:0;top:0;width:2px;height:100%;background:var(--line2)}
+.metric.v::after{background:var(--volt)} .metric.a::after{background:var(--amber)} .metric.r::after{background:var(--red)} .metric.c::after{background:var(--cyan)}
+.metric-label{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.metric-val{font-family:var(--disp);font-size:36px;font-weight:600;line-height:1.1;margin:7px 0 2px;letter-spacing:-.03em}
+.metric-val small{font-family:var(--mono);font-size:11px;color:var(--dim);font-weight:400;letter-spacing:0}
+.metric-foot{font-family:var(--mono);font-size:10px;color:var(--dim)}
+.grid-2{display:grid;grid-template-columns:1.55fr .95fr;gap:16px;align-items:start}
+.card{border:1px solid var(--line);background:linear-gradient(180deg,rgba(23,28,34,.75),rgba(18,22,27,.75));padding:17px 18px}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:13px}
+.card-h h3{font-family:var(--disp);font-size:16px;font-weight:600;letter-spacing:-.01em}
+.card-h .tiny{white-space:nowrap}
+table{width:100%;border-collapse:collapse}
+th{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);text-align:left;font-weight:400;padding:0 9px 9px;border-bottom:1px solid var(--line)}
+td{padding:11px 9px;border-bottom:1px solid rgba(36,43,51,.62);vertical-align:middle;font-size:13px}
+tbody tr{transition:background .14s}
+tbody tr:hover{background:rgba(255,255,255,.028)}
+tbody tr.click{cursor:pointer}
+tbody tr:last-child td{border-bottom:0}
+.pill{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border:1px solid var(--line2);border-radius:2px;color:var(--muted);white-space:nowrap}
+.pill::before{content:'';width:4px;height:4px;border-radius:50%;background:currentColor}
+.pill.ok{color:var(--green);border-color:rgba(124,231,178,.35);background:rgba(124,231,178,.06)}
+.pill.run{color:var(--cyan);border-color:rgba(111,227,255,.35);background:rgba(111,227,255,.06)}
+.pill.warn{color:var(--amber);border-color:rgba(255,179,71,.4);background:rgba(255,179,71,.07)}
+.pill.bad{color:var(--red);border-color:rgba(255,92,92,.4);background:rgba(255,92,92,.07)}
+.pill.mute{color:var(--dim)}
+.pill.volt{color:#0B0E11;background:var(--volt);border-color:var(--volt);font-weight:600}
+.risk{display:inline-flex;align-items:center;gap:7px}
+.risk-bars{display:inline-flex;gap:2px}
+.risk-bars i{width:5px;height:12px;background:#2C343E;display:block}
+.risk.high i:nth-child(-n+3){background:var(--red)}
+.risk.mid i:nth-child(-n+2){background:var(--amber)}
+.risk.low i:nth-child(1){background:var(--green)}
+.risk span{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.btn{
+  display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line2);padding:8px 12px;
+  border-radius:2px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text);transition:.15s;white-space:nowrap;
+}
+.btn:hover{border-color:var(--volt);color:var(--volt)}
+.btn.primary{background:var(--volt);border-color:var(--volt);color:#0B0E11;font-weight:600}
+.btn.primary:hover{background:#E4FF72;color:#0B0E11}
+.btn.danger{border-color:rgba(255,92,92,.45);color:var(--red)}
+.btn.danger:hover{background:rgba(255,92,92,.1)}
+.btn:disabled{opacity:.35;cursor:not-allowed;border-color:var(--line2);color:var(--dim)}
+.btn:disabled:hover{background:none;color:var(--dim)}
+.link{color:var(--volt);cursor:pointer;font-size:12px}
+.link:hover{text-decoration:underline}
+.banner{display:flex;gap:11px;align-items:flex-start;border:1px solid;padding:11px 14px;font-size:12.5px;margin-bottom:16px}
+.banner b{font-weight:600}
+.banner .code{font-family:var(--mono);font-size:10px;opacity:.75;margin-left:4px}
+.banner.warn{border-color:rgba(255,179,71,.4);background:rgba(255,179,71,.07);color:#FFD9A3}
+.banner.bad{border-color:rgba(255,92,92,.4);background:rgba(255,92,92,.07);color:#FFB3B3}
+.banner.info{border-color:rgba(111,227,255,.35);background:rgba(111,227,255,.06);color:#BDEFFF}
+.banner .bicon{font-family:var(--mono);font-size:12px;margin-top:1px}
+.kv{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.kv > div{background:var(--panel);padding:11px 13px}
+.kv dt{font-family:var(--mono);font-size:9px;letter-spacing:.11em;text-transform:uppercase;color:var(--dim);margin-bottom:3px}
+.kv dd{font-size:13px}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:0 0 18px}
+.tabs button{padding:10px 14px;font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:.15s}
+.tabs button:hover{color:var(--text)}
+.tabs button.on{color:var(--volt);border-bottom-color:var(--volt)}
+.sec-title{display:flex;align-items:center;justify-content:space-between;margin:22px 0 11px}
+.sec-title h3{font-family:var(--disp);font-size:17px;font-weight:600}
+.empty{padding:40px 20px;text-align:center;color:var(--muted);font-size:13px}
+.empty b{display:block;color:var(--text);font-family:var(--disp);font-size:16px;margin-bottom:5px}
+.skel{height:13px;background:linear-gradient(90deg,#1A2027,#232B34,#1A2027);background-size:200% 100%;animation:shimmer 1.2s infinite}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.stagger > *{animation:rise .5s cubic-bezier(.2,.7,.2,1) both}
+.stagger > *:nth-child(1){animation-delay:.02s}.stagger > *:nth-child(2){animation-delay:.06s}
+.stagger > *:nth-child(3){animation-delay:.1s}.stagger > *:nth-child(4){animation-delay:.14s}
+.stagger > *:nth-child(5){animation-delay:.18s}.stagger > *:nth-child(6){animation-delay:.22s}
+
+/* ---------- workbench ---------- */
+.approval-row{display:grid;grid-template-columns:1fr auto;gap:14px;padding:12px 0;border-bottom:1px solid rgba(36,43,51,.62);align-items:center}
+.approval-row:last-child{border-bottom:0}
+.approval-row .t{font-size:13px;font-weight:500}
+.approval-row .m{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px;display:flex;gap:9px;flex-wrap:wrap}
+.alert-card{border:1px solid rgba(255,92,92,.38);background:linear-gradient(135deg,rgba(255,92,92,.11),rgba(18,22,27,.6));padding:16px;position:relative;overflow:hidden}
+.alert-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--red)}
+.alert-card .k{font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:var(--red);text-transform:uppercase}
+.alert-card h3{font-family:var(--disp);font-size:17px;font-weight:600;margin:8px 0 6px;line-height:1.25}
+.alert-card p{font-size:12px;color:var(--muted);margin-bottom:12px}
+.release-row{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid rgba(36,43,51,.6)}
+.release-row:last-child{border-bottom:0}
+.release-row .id{font-family:var(--mono);font-size:10px;color:var(--muted);width:128px;flex:none}
+.release-row .t{flex:1;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chain{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:4px}
+.chain i{width:22px;height:1px;background:var(--line2)}
+
+/* ---------- catalog ---------- */
+.catalog{display:grid;grid-template-columns:216px minmax(0,1fr) 330px;gap:14px;align-items:start}
+.tree{border:1px solid var(--line);background:rgba(18,22,27,.66);padding:10px 8px}
+.tree-app{padding:7px 9px;font-size:12.5px;display:flex;align-items:center;gap:7px;border-radius:2px}
+.tree-app b{font-weight:600}
+.tree-app .cnt{font-family:var(--mono);font-size:9px;color:var(--dim);margin-left:auto}
+.tree-app:hover{background:rgba(255,255,255,.03)}
+.tree-sub{padding:5px 9px 5px 24px;font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between;border-left:1px solid var(--line);margin-left:14px}
+.tree-sub:hover{color:var(--text)}
+.tree-sub.on{color:var(--volt);border-left-color:var(--volt)}
+.cfg-table-wrap{border:1px solid var(--line);background:rgba(18,22,27,.66);overflow:hidden}
+.cfg-toolbar{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--line);gap:10px}
+.cfg-toolbar .path{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.05em}
+.cfg-row{cursor:pointer}
+.cfg-row.on{background:rgba(216,255,62,.05)}
+.cfg-row.on td:first-child{box-shadow:inset 2px 0 0 var(--volt)}
+.cfg-check{width:26px;padding-right:0!important}
+.cfg-check input{width:13px;height:13px;accent-color:var(--volt);cursor:pointer;vertical-align:middle}
+.selbar{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid rgba(198,242,78,.3);background:rgba(198,242,78,.06);font-size:12px}
+.selbar b{font-family:var(--mono);color:var(--volt)}
+.selbar .spacer{flex:1}
+.cfg-detail{border:1px solid var(--line);background:linear-gradient(180deg,var(--panel2),rgba(18,22,27,.75));padding:16px;position:sticky;top:0}
+.cfg-detail h3{font-family:var(--mono);font-size:13px;word-break:break-all;line-height:1.35}
+.detail-tag{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.value-box{background:#0C1014;border:1px solid var(--line2);padding:11px;font-family:var(--mono);font-size:12px;margin:10px 0;position:relative;word-break:break-all}
+.value-box.masked{letter-spacing:.25em;color:var(--muted)}
+.value-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.snapshot-note{font-family:var(--mono);font-size:9.5px;color:var(--dim);margin-top:9px;display:flex;align-items:center;gap:6px}
+
+/* ---------- change detail ---------- */
+.detail-head{border:1px solid var(--line);background:linear-gradient(120deg,rgba(23,28,34,.9),rgba(18,22,27,.6));padding:19px 20px;margin-bottom:16px;position:relative}
+.detail-head::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--amber)}
+.detail-no{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.12em}
+.detail-head h2{font-family:var(--disp);font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:1.2;margin:5px 0 12px}
+.detail-meta{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.detail-meta b{color:var(--text);font-weight:500}
+.action-bar{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 18px}
+.action-bar .spacer{flex:1}
+.diff-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.diff-col{background:#0E1217;min-width:0}
+.diff-col-h{display:flex;align-items:center;justify-content:space-between;padding:8px 11px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.diff-col-h b{color:var(--text);font-weight:500}
+.diff-line{display:flex;gap:9px;padding:1.5px 10px;font-family:var(--mono);font-size:11.5px;line-height:1.65;white-space:pre;overflow-x:auto}
+.diff-line .ln{width:20px;flex:none;color:#3E4750;text-align:right;user-select:none}
+.diff-line.add{background:rgba(124,231,178,.09);color:#B9F5D4}
+.diff-line.del{background:rgba(255,92,92,.09);color:#FFBDBD}
+.diff-line.mod{background:rgba(255,179,71,.1);color:#FFDCA8}
+.diff-line.same .tx{color:#A7AEB7}
+.diff-note{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:9px;display:flex;justify-content:space-between}
+.impact-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:15px}
+.impact-stats div{background:var(--panel);padding:13px}
+.impact-stats b{display:block;font-family:var(--disp);font-size:26px;line-height:1.1}
+.impact-stats span{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.timeline{position:relative;padding-left:20px}
+.timeline::before{content:'';position:absolute;left:5px;top:5px;bottom:5px;width:1px;background:var(--line2)}
+.tl{position:relative;padding:0 0 16px 6px}
+.tl::before{content:'';position:absolute;left:-19px;top:4px;width:9px;height:9px;border-radius:50%;background:var(--panel);border:1px solid var(--line2)}
+.tl.done::before{background:var(--volt);border-color:var(--volt)}
+.tl.now::before{background:var(--amber);border-color:var(--amber);box-shadow:0 0 0 3px rgba(255,179,71,.12)}
+.tl b{font-size:12.5px;font-weight:600}
+.tl p{font-size:11.5px;color:var(--muted);margin-top:1px}
+.tl .tm{font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:2px}
+.precheck{border:1px solid var(--line);background:var(--panel);margin-bottom:14px}
+.pc{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid rgba(36,43,51,.6);font-size:12.5px}
+.pc:last-child{border-bottom:0}
+.pc .st{width:15px;height:15px;border:1px solid var(--line2);display:grid;place-items:center;font-family:var(--mono);font-size:9px;color:var(--muted);flex:none}
+.pc.ok .st{border-color:rgba(124,231,178,.5);color:var(--green)}
+.pc.bad .st{border-color:rgba(255,92,92,.5);color:var(--red)}
+.pc .why{margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--dim)}
+.pc.bad .why{color:var(--red)}
+.result{border:1px solid;padding:15px 16px;margin-top:14px}
+.result.ok{border-color:rgba(124,231,178,.4);background:rgba(124,231,178,.06)}
+.result.warn{border-color:rgba(255,179,71,.45);background:rgba(255,179,71,.07)}
+.result.bad{border-color:rgba(255,92,92,.45);background:rgba(255,92,92,.07)}
+.result h4{font-family:var(--disp);font-size:16px;margin-bottom:4px}
+.result p{font-size:12px;color:var(--muted)}
+.result .row{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:10px;margin-top:10px;color:var(--muted)}
+.result .row b{color:var(--text);font-weight:500}
+.seg{display:inline-flex;border:1px solid var(--line2)}
+.seg button{padding:5px 9px;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border-right:1px solid var(--line2)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--volt);color:#0B0E11;font-weight:600}
+
+/* ---------- audit / sync / misc ---------- */
+.audit-row{display:grid;grid-template-columns:72px 120px 1fr 130px;gap:12px;align-items:center;padding:10px 4px;border-bottom:1px solid rgba(36,43,51,.6);font-size:12px}
+.audit-row:hover{background:rgba(255,255,255,.025)}
+.audit-row .tm{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.audit-row .act{font-family:var(--mono);font-size:10px;color:var(--cyan)}
+.audit-row .obj b{display:block;font-weight:500}
+.audit-row .obj span{font-family:var(--mono);font-size:9.5px;color:var(--dim)}
+.hash{font-family:var(--mono);font-size:9.5px;color:var(--dim);border:1px solid var(--line);padding:2px 5px;white-space:nowrap}
+.hash.ok{color:var(--green);border-color:rgba(124,231,178,.3)}
+.sync-table td{vertical-align:top}
+.sync-val{font-family:var(--mono);font-size:11px;background:#0E1217;border:1px solid var(--line);padding:6px 8px;white-space:pre-wrap;word-break:break-all}
+.sync-val.diff{border-color:rgba(255,179,71,.4);color:#FFD9A3}
+.recycle-card{border:1px solid var(--line);background:var(--panel);padding:14px;display:grid;gap:9px}
+.recycle-card .days{font-family:var(--disp);font-size:30px;line-height:1;color:var(--amber)}
+.recycle-card .days small{font-family:var(--mono);font-size:10px;color:var(--dim)}
+.batch-card{border:1px solid var(--line);background:var(--panel);padding:15px}
+.batch-pick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.item-list{display:grid;margin-top:10px;border-top:1px solid var(--line)}
+.item-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(36,43,51,.55)}
+.item-edit{display:grid;grid-template-columns:1.25fr .7fr 1fr;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(36,43,51,.55)}
+.item-edit input{width:100%}
+.batch-file{border:1px solid var(--line);padding:11px;margin-bottom:9px;background:var(--panel2)}
+.batch-file-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
+.progress{height:5px;background:#232A33;display:flex;overflow:hidden;margin:8px 0}
+.progress i{display:block;height:100%;background:var(--green)}
+.progress i.f{background:var(--red)}
+.subitem{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid rgba(36,43,51,.55);font-size:12px}
+.subitem:last-child{border-bottom:0}
+.subitem .sp{flex:1}
+.sched-row{display:grid;grid-template-columns:1fr 130px 120px 100px;gap:12px;align-items:center;padding:11px 4px;border-bottom:1px solid rgba(36,43,51,.6);font-size:12.5px}
+.countdown{font-family:var(--mono);font-size:12px;color:var(--volt)}
+.admin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.instance{border:1px solid var(--line);background:var(--panel);padding:14px}
+.instance .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.instance h4{font-family:var(--mono);font-size:12px}
+.instance .addr{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:2px}
+.grant{display:flex;gap:2px;flex-wrap:wrap}
+.grant i{width:9px;height:9px;background:#232A33;display:block}
+.grant i.on{background:var(--volt)}
+.toast-wrap{position:fixed;right:22px;bottom:22px;z-index:120;display:grid;gap:8px;max-width:380px}
+.toast{background:#12181E;border:1px solid var(--line2);border-left:2px solid var(--volt);padding:11px 14px;font-size:12.5px;box-shadow:0 18px 40px rgba(0,0,0,.45);animation:rise .25s both}
+.toast.bad{border-left-color:var(--red)} .toast.warn{border-left-color:var(--amber)}
+.toast b{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:2px}
+.modal-bg{position:fixed;inset:0;background:rgba(5,7,9,.72);backdrop-filter:blur(6px);z-index:100;display:grid;place-items:center;padding:24px;animation:fade .18s both}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{width:min(560px,100%);max-height:86vh;overflow-y:auto;background:#11161C;border:1px solid var(--line2);box-shadow:0 30px 80px rgba(0,0,0,.6);animation:rise .22s both}
+.modal-h{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--line)}
+.modal-h h3{font-family:var(--disp);font-size:17px;font-weight:600}
+.modal-h .x{font-family:var(--mono);font-size:15px;color:var(--muted);padding:2px 6px}
+.modal-b{padding:18px;font-size:13px}
+.modal-b p{color:var(--muted);margin-bottom:11px}
+.modal-b label{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:12px 0 6px}
+.modal-b textarea{width:100%;min-height:84px;resize:vertical}
+.modal-b input{width:100%}
+.hint{font-family:var(--mono);font-size:9.5px;color:var(--dim);display:flex;justify-content:space-between;margin-top:5px}
+.err{color:var(--red);font-family:var(--mono);font-size:10px;margin-top:5px;min-height:14px}
+.modal-f{display:flex;justify-content:flex-end;gap:8px;padding:13px 18px;border-top:1px solid var(--line)}
+.mono-block{font-family:var(--mono);font-size:11px;background:#0C1014;border:1px solid var(--line);padding:10px;white-space:pre-wrap;color:#B9C2CC}
+.notif{display:flex;gap:10px;padding:11px 0;border-bottom:1px solid rgba(36,43,51,.6)}
+.notif:last-child{border-bottom:0}
+.notif .nd{width:6px;height:6px;border-radius:50%;background:var(--red);margin-top:7px;flex:none}
+.notif .nd.read{background:var(--line2)}
+.notif b{font-size:12.5px;font-weight:500;display:block}
+.notif span{font-family:var(--mono);font-size:9.5px;color:var(--dim)}
+.palette input{width:100%;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:15px 18px;font-size:15px;background:transparent}
+.palette .pl{display:flex;align-items:center;gap:10px;padding:10px 18px;font-size:13px;cursor:pointer;border-bottom:1px solid rgba(36,43,51,.4)}
+.palette .pl:hover,.palette .pl.on{background:rgba(216,255,62,.06)}
+.palette .pl .k{margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--dim)}
+@media (max-width:1440px){.catalog{grid-template-columns:190px minmax(0,1fr) 300px}}
+@media (max-width:1240px){
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .grid-2{grid-template-columns:1fr}
+  .catalog{grid-template-columns:190px minmax(0,1fr)}
+  .cfg-detail{grid-column:1/-1;position:static}
+  .diff-grid{grid-template-columns:1fr}
+  .hero{grid-template-columns:1fr}
+  .hero-side{flex-direction:row;align-items:center;justify-content:flex-start}
+}
+@media (max-width:980px){
+  .rail{width:64px}
+  .brand-name,.brand-sub,.nav-item span,.nav-item .idx,.rail-foot{display:none}
+  .brand{justify-content:center;padding:18px 0}
+  .nav-item{justify-content:center;padding:11px 0}
+  .main{margin-left:64px}
+  .catalog{grid-template-columns:1fr}
+  .tree{display:none}
+  .view{padding:20px 18px 60px}
+  .audit-row{grid-template-columns:64px 1fr;gap:4px}
+  .audit-row .act,.audit-row .hash{grid-column:1/-1}
+  .admin-grid{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="brand">
+      <div class="brand-mark">N</div>
+      <div>
+        <div class="brand-name">NCG Control</div>
+        <div class="brand-sub">TongNCS Governance</div>
+      </div>
+    </div>
+    <nav id="nav"></nav>
+    <div class="rail-foot">
+      <div>唯一事实源 <b>TongNCS</b></div>
+      <div>元数据库 <b>PostgreSQL 16</b></div>
+      <div>文档基线 <b>spec v1.3</b></div>
+    </div>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <div class="crumb" id="crumb"></div>
+      <div class="top-right">
+        <div class="env-switch" id="envSwitch"></div>
+        <button class="ghost" onclick="openNotifications()">通知 <span class="unread"></span></button>
+        <div class="user">
+          <div class="avatar">周</div>
+          <div class="user-meta"><b>周启</b><span>应用负责人 · 支付网关</span></div>
+        </div>
+      </div>
+    </header>
+    <div class="view" id="view"></div>
+  </main>
+</div>
+<div id="modal-root"></div>
+<div class="toast-wrap" id="toast-root" aria-live="polite"></div>
+<script>
+/* ============ data ============ */
+const ICON = {
+  workbench:'<rect x="2" y="2" width="5" height="5"/><rect x="9" y="2" width="5" height="5"/><rect x="2" y="9" width="5" height="5"/><rect x="9" y="9" width="5" height="5"/>',
+  catalog:'<path d="M2 4.5 8 2l6 2.5-6 2.5z"/><path d="M2 8l6 2.5L14 8"/><path d="M2 11.5 8 14l6-2.5"/>',
+  changes:'<path d="M4 2h5l3 3v9H4z"/><path d="M9 2v3h3"/><path d="M6 8h4M6 10.5h4"/>',
+  approvals:'<circle cx="8" cy="8" r="6"/><path d="m5.5 8 1.8 1.8L10.8 6"/>',
+  releases:'<circle cx="8" cy="8" r="6"/><path d="M6.5 5.5 11 8l-4.5 2.5z"/>',
+  envsync:'<path d="M3 6h8a3 3 0 0 1 0 6H7"/><path d="M5 4 3 6l2 2"/><path d="M11 10l2 2-2 2"/>',
+  audit:'<path d="M8 2 13 4v4c0 3-2.2 5-5 6-2.8-1-5-3-5-6V4z"/><path d="m6 8 1.5 1.5L10.5 7"/>',
+  recycle:'<path d="M3 5h10"/><path d="M6 5V3h4v2"/><path d="M4.5 5l.7 8h5.6l.7-8"/><path d="M7 7.5v3M9 7.5v3"/>',
+  admin:'<path d="M3 4h10M3 8h10M3 12h10"/><circle cx="6" cy="4" r="1.4"/><circle cx="10" cy="8" r="1.4"/><circle cx="5" cy="12" r="1.4"/>',
+  schedules:'<circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 1.5"/>',
+  batches:'<rect x="2.5" y="3" width="11" height="4"/><rect x="2.5" y="9" width="11" height="4"/>'
+};
+const NAV = [
+  {label:'治理', items:[
+    ['workbench','工作台','01'],['catalog','配置目录','02'],['changes','变更单','03'],
+    ['schedules','定时任务','04'],['batches','批量变更','05'],['approvals','审批中心','06']
+  ]},
+  {label:'发布', items:[
+    ['releases','发布控制台','07'],['envsync','跨环境同步','08'],['recycle','回收站','09']
+  ]},
+  {label:'监督', items:[['audit','审计与检测','10']]},
+  {label:'管理', items:[['admin','管理与设置','11']]}
+];
+const ST = {
+  DRAFT:['草稿','mute'], PENDING_APPROVAL:['待审批','warn'], APPROVED:['已通过','run'],
+  SCHEDULED:['已定时','run'], RELEASING:['发布中','run'], SUCCEEDED:['已发布','ok'],
+  FAILED:['发布失败','bad'], INDETERMINATE:['结果不确定','warn'], CANCELLED:['已取消','mute'],
+  PARTIAL:['部分成功','warn']
+};
+const RISKC = {'高':'high','中':'mid','低':'low'};
+const ENV = {
+  dev:{label:'DEV',name:'开发',health:'ok',latency:'18ms'},
+  staging:{label:'STAGING',name:'预发',health:'ok',latency:'24ms'},
+  prod:{label:'PROD',name:'生产',health:'ok',latency:'31ms'}
+};
+const state = {
+  view:'workbench', env:'prod', changeNo:null, tab:'overview', diff:'split',
+  treeApp:'支付网关', group:'payment', selConfig:'prod:payment.yaml',
+  adminTab:'users', auditFilter:'all', relOutcome:'verified', releaseRun:null,
+  revealed:null, chainVerified:false, verifying:false, syncSel:[], syncBanner:false,
+  cfgSel:[], batchId:null
+};
+const DATA = {
+  changes:[
+    {no:'CR-20261122-0007', title:'支付超时时间 3s → 5s', app:'支付网关', env:'prod', group:'payment', fileId:'prod:payment.yaml', dataId:'payment.timeout', type:'UPDATE', status:'PENDING_APPROVAL', risk:'高', submitter:'林玥', owner:'周启', baseline:'9f2c1a7e', draft:'3f81bd42', current:'9f2c1a7e', drift:false, submitted:'2026-11-22 10:06', scheduled:'—', reason:'大促期间支付回调偶发超时，延长超时以降低失败率', impact:{instances:12, apps:3, unknown:false, owners:['周启','陈默']}},
+    {no:'CR-20261122-0006', title:'订单服务灰度开关开启', app:'订单服务', env:'staging', group:'order', fileId:'staging:order.yaml', dataId:'order.gray.enabled', type:'TOGGLE', status:'APPROVED', risk:'中', submitter:'陈默', owner:'周启', baseline:'c81f90aa', draft:'b12e77c0', current:'c81f90aa', drift:false, submitted:'2026-11-22 09:58', scheduled:'—', reason:'灰度发布前打开订单灰度读取开关', impact:{instances:8, apps:2, unknown:false, owners:['周启']}},
+    {no:'CR-20261122-0005', title:'库存扣减重试次数 2 → 3', app:'库存服务', env:'prod', group:'inventory', fileId:'prod:inventory.yaml', dataId:'inventory.retry', type:'UPDATE', status:'SCHEDULED', risk:'低', submitter:'林玥', owner:'周启', baseline:'aa10cd77', draft:'51fe092b', current:'aa10cd77', drift:false, submitted:'2026-11-22 09:20', scheduled:'2026-11-22 20:00', reason:'高峰期库存扣减偶发冲突，增加一次重试', impact:{instances:6, apps:1, unknown:false, owners:['周启']}},
+    {no:'CR-20261121-0012', title:'风控规则版本升级', app:'风控服务', env:'prod', group:'risk', fileId:'prod:risk-rules.yaml', dataId:'risk.rules.version', type:'UPDATE', status:'INDETERMINATE', risk:'高', submitter:'赵一鸣', owner:'周启', baseline:'77aa21c9', draft:'4b90fe11', current:'4b90fe11', drift:false, submitted:'2026-11-21 16:44', scheduled:'—', reason:'升级风控规则包到 v4.2，修复名单匹配缺陷', impact:{instances:9, apps:4, unknown:true, owners:['周启','赵一鸣']}},
+    {no:'CR-20261121-0009', title:'支付网关连接池扩容', app:'支付网关', env:'staging', group:'payment', fileId:'staging:payment.yaml', dataId:'payment.pool.size', type:'UPDATE', status:'SUCCEEDED', risk:'中', submitter:'林玥', owner:'周启', baseline:'d10c9b31', draft:'7a22e410', current:'7a22e410', drift:false, submitted:'2026-11-21 15:02', scheduled:'—', reason:'预发压测连接等待偏高，扩容连接池验证', impact:{instances:8, apps:2, unknown:false, owners:['周启']}},
+    {no:'CR-20261121-0008', title:'用户中心验证码长度调整', app:'用户中心', env:'dev', group:'user', fileId:'dev:user.yaml', dataId:'user.captcha.length', type:'UPDATE', status:'DRAFT', risk:'低', submitter:'陈默', owner:'周启', baseline:'—', draft:'—', current:'0e11aa76', drift:false, submitted:'—', scheduled:'—', reason:'验证码从 4 位调整为 6 位', impact:{instances:2, apps:1, unknown:false, owners:['陈默']}},
+    {no:'CR-20261121-0003', title:'促销开关关闭', app:'促销服务', env:'prod', group:'promo', fileId:'prod:promo.yaml', dataId:'promo.enabled', type:'TOGGLE', status:'PENDING_APPROVAL', risk:'高', submitter:'周启', owner:'周启', baseline:'55cd12ab', draft:'91ee03cd', current:'55cd12ab', drift:true, submitted:'2026-11-21 14:10', scheduled:'—', reason:'大促结束后关闭促销总开关，避免继续发放优惠', impact:{instances:11, apps:3, unknown:false, owners:['周启']}}
+  ],
+  configs:[
+    {id:'prod:payment.yaml', env:'prod', app:'支付网关', group:'payment', dataId:'payment.yaml', format:'YAML', desc:'支付服务主配置', owner:'周启', updated:'2026-11-22 09:41', md5:'9f2c1a7e', items:[
+      {key:'payment.timeout', value:'3000', desc:'支付请求超时（毫秒）'},
+      {key:'payment.retry', value:'2', desc:'支付失败重试次数'},
+      {key:'payment.merchant.key', value:'••••••••••••', real:'sk_live_9f2c1a7e4b90fe11', desc:'商户密钥', sensitive:true},
+      {key:'payment.pool.size', value:'40', desc:'数据库连接池大小'}
+    ]},
+    {id:'prod:payment-datasource.properties', env:'prod', app:'支付网关', group:'payment', dataId:'payment-datasource.properties', format:'PROPERTIES', desc:'支付数据源配置', owner:'周启', updated:'2026-11-22 08:15', md5:'3ad9c0f1', items:[
+      {key:'spring.datasource.url', value:'jdbc:mysql://pay-db:3306/pay?useSSL=false', desc:'数据源地址'},
+      {key:'spring.datasource.username', value:'pay_app', desc:'数据库账号'},
+      {key:'spring.datasource.password', value:'••••••••••••', real:'P@ssw0rd_pay_2026', desc:'数据库密码', sensitive:true},
+      {key:'spring.datasource.pool.max-active', value:'40', desc:'最大连接数'},
+      {key:'spring.datasource.pool.connection-timeout', value:'3000', desc:'连接超时（毫秒）'}
+    ]},
+    {id:'prod:payment-trace.yml', env:'prod', app:'支付网关', group:'payment', dataId:'payment-trace.yml', format:'YAML', desc:'支付链路追踪配置', owner:'周启', updated:'2026-11-22 08:02', md5:'e71b2c44', items:[
+      {key:'payment.trace.enabled', value:'true', desc:'链路追踪开关'},
+      {key:'payment.trace.sample-rate', value:'0.1', desc:'采样率'},
+      {key:'payment.trace.exporter', value:'otlp', desc:'上报协议'}
+    ]},
+    {id:'prod:payment-circuit.yaml', env:'prod', app:'支付网关', group:'payment', dataId:'payment-circuit.yaml', format:'YAML', desc:'支付熔断配置', owner:'周启', updated:'2026-11-21 10:12', md5:'f00d12ab', items:[
+      {key:'payment.circuit.enabled', value:'false', desc:'熔断开关'},
+      {key:'payment.circuit.threshold', value:'20', desc:'熔断失败阈值'}
+    ]},
+    {id:'prod:payment-log.yaml', env:'prod', app:'支付网关', group:'payment', dataId:'payment-log.yaml', format:'YAML', desc:'支付日志配置', owner:'周启', updated:'2026-11-20 16:40', md5:'7c31aa90', items:[
+      {key:'payment.log.level', value:'INFO', desc:'日志级别'},
+      {key:'payment.log.retention', value:'7', desc:'日志保留天数'}
+    ]},
+    {id:'prod:risk-rules.yaml', env:'prod', app:'风控服务', group:'risk', dataId:'risk-rules.yaml', format:'YAML', desc:'风控规则包配置', owner:'周启', updated:'2026-11-21 17:02', md5:'4b90fe11', items:[
+      {key:'risk.rules.version', value:'v4.2', desc:'规则包版本'},
+      {key:'risk.gray.enabled', value:'false', desc:'风控灰度开关'}
+    ]},
+    {id:'prod:promo.yaml', env:'prod', app:'促销服务', group:'promo', dataId:'promo.yaml', format:'YAML', desc:'促销总配置', owner:'周启', updated:'2026-11-21 14:10', md5:'55cd12ab', items:[
+      {key:'promo.enabled', value:'true', desc:'促销总开关'},
+      {key:'promo.daily.budget', value:'1000000', desc:'每日预算上限'}
+    ]},
+    {id:'prod:inventory.yaml', env:'prod', app:'库存服务', group:'inventory', dataId:'inventory.yaml', format:'YAML', desc:'库存服务配置', owner:'周启', updated:'2026-11-21 09:20', md5:'aa10cd77', items:[
+      {key:'inventory.retry', value:'2', desc:'扣减重试次数'},
+      {key:'inventory.pool.size', value:'20', desc:'库存库连接池'}
+    ]},
+    {id:'staging:payment.yaml', env:'staging', app:'支付网关', group:'payment', dataId:'payment.yaml', format:'YAML', desc:'支付服务主配置', owner:'周启', updated:'2026-11-22 09:30', md5:'c81f90aa', items:[
+      {key:'payment.timeout', value:'3000', desc:'支付请求超时（毫秒）'},
+      {key:'payment.retry', value:'2', desc:'支付失败重试次数'},
+      {key:'payment.merchant.key', value:'••••••••••••', real:'sk_test_51fe092b7a22e410', desc:'商户密钥', sensitive:true},
+      {key:'payment.pool.size', value:'40', desc:'数据库连接池大小'}
+    ]},
+    {id:'staging:order.yaml', env:'staging', app:'订单服务', group:'order', dataId:'order.yaml', format:'YAML', desc:'订单服务配置', owner:'周启', updated:'2026-11-22 09:58', md5:'c81f90aa', items:[
+      {key:'order.gray.enabled', value:'false', desc:'订单灰度读取开关'},
+      {key:'order.timeout', value:'1200', desc:'订单查询超时（毫秒）'}
+    ]},
+    {id:'dev:user.yaml', env:'dev', app:'用户中心', group:'user', dataId:'user.yaml', format:'YAML', desc:'用户中心配置', owner:'陈默', updated:'2026-11-21 13:20', md5:'0e11aa76', items:[
+      {key:'user.captcha.length', value:'4', desc:'验证码长度'},
+      {key:'user.session.ttl', value:'1800', desc:'会话有效期（秒）'}
+    ]},
+    {id:'dev:payment.yaml', env:'dev', app:'支付网关', group:'payment', dataId:'payment.yaml', format:'YAML', desc:'支付服务主配置', owner:'周启', updated:'2026-11-21 11:11', md5:'77aa21c9', items:[
+      {key:'payment.timeout', value:'2000', desc:'支付请求超时（毫秒）'},
+      {key:'payment.retry', value:'2', desc:'支付失败重试次数'}
+    ]}
+  ],
+  releases:[
+    {id:'REL-20261122-0043', change:'CR-20261122-0006', env:'staging', status:'verified', md5:'b12e77c0', at:'10:42:18', trace:'7f3c9a21'},
+    {id:'REL-20261122-0042', change:'CR-20261121-0009', env:'staging', status:'verified', md5:'7a22e410', at:'09:58:04', trace:'31ab77e0'},
+    {id:'REL-20261121-0041', change:'CR-20261121-0012', env:'prod', status:'indeterminate', md5:'—', at:'17:03:46', trace:'9d20c4f1'},
+    {id:'REL-20261121-0040', change:'CR-20261121-0003', env:'prod', status:'rejected', md5:'—', at:'14:12:09', trace:'2c77ab13'}
+  ],
+  audits:[
+    {time:'10:42:18', actor:'周启', action:'RELEASE_RESULT', obj:'payment.timeout', detail:'读回一致 verified', result:'成功', hash:'a91f0c', prev:'77c2e1'},
+    {time:'10:42:17', actor:'system', action:'RELEASE_INTENT', obj:'payment.timeout', detail:'意图写入 · key=CR-0006:3', result:'成功', hash:'77c2e1', prev:'bc10aa'},
+    {time:'10:06:12', actor:'林玥', action:'CHANGE_SUBMIT', obj:'CR-20261122-0007', detail:'冻结基线 9f2c1a7e', result:'成功', hash:'bc10aa', prev:'0d91fe'},
+    {time:'09:58:04', actor:'周启', action:'APPROVAL_APPROVE', obj:'CR-20261122-0006', detail:'单人会签通过', result:'成功', hash:'0d91fe', prev:'55aa03'},
+    {time:'09:41:33', actor:'unknown', action:'DIRECT_CHANGE', obj:'payment.retry', detail:'未匹配平台发布记录', result:'告警', hash:'55aa03', prev:'9e12c7'},
+    {time:'09:30:01', actor:'陈默', action:'CONFIG_SENSITIVE_VIEW', obj:'payment.merchant.key', detail:'原因：排查商户验签失败', result:'成功', hash:'9e12c7', prev:'31b0d4'},
+    {time:'08:55:20', actor:'赵敏', action:'AUDIT_EXPORT', obj:'2026-11-21', detail:'导出 1,204 条', result:'成功', hash:'31b0d4', prev:'88fe01'},
+    {time:'08:12:07', actor:'system', action:'CHAIN_VERIFY', obj:'2026-11-21', detail:'链完整 · 12,880 条', result:'成功', hash:'88fe01', prev:'—'}
+  ],
+  recycle:[
+    {id:'RB-001', app:'订单服务', env:'staging', dataId:'order.feature.flag', deleted:'2026-11-12 14:20', days:20, by:'林玥', conflict:false},
+    {id:'RB-002', app:'支付网关', env:'prod', dataId:'payment.legacy.sign', deleted:'2026-11-05 10:02', days:13, by:'周启', conflict:true},
+    {id:'RB-003', app:'用户中心', env:'dev', dataId:'user.old.captcha', deleted:'2026-10-28 16:45', days:5, by:'陈默', conflict:false}
+  ],
+  schedules:[
+    {change:'CR-20261122-0005', env:'prod', at:'2026-11-22 20:00', remain:'02:14:33', status:'等待到点'},
+    {change:'CR-20261118-0021', env:'staging', at:'2026-11-22 18:30', remain:'00:44:33', status:'到点复核失败', reason:'基线已变化'},
+    {change:'CR-20261117-0011', env:'dev', at:'2026-11-22 12:00', remain:'—', status:'已发布'}
+  ],
+  batches:[
+    {id:'BAT-20261122-0002', title:'支付链路 2 个配置文件调整', env:'prod', total:2, ok:1, fail:1, status:'PARTIAL', items:[
+      {id:'CR-20261122-0011', fileId:'prod:payment.yaml', dataId:'payment.yaml', status:'成功', changes:[
+        {key:'payment.timeout', from:'3000', to:'5000'},
+        {key:'payment.retry', from:'2', to:'3'}
+      ]},
+      {id:'CR-20261122-0012', fileId:'prod:payment-circuit.yaml', dataId:'payment-circuit.yaml', status:'失败', reason:'实例不可用 REL-503-001', changes:[
+        {key:'payment.circuit.enabled', from:'false', to:'true'}
+      ]}
+    ]}
+  ],
+  users:[
+    {name:'周启', account:'zhou.qi', role:'应用负责人', apps:'支付网关 / 风控服务', status:'启用', last:'10:42'},
+    {name:'林玥', account:'lin.yue', role:'编辑者 / 发布人', apps:'支付网关 / 库存服务', status:'启用', last:'10:06'},
+    {name:'陈默', account:'chen.mo', role:'编辑者', apps:'订单服务 / 用户中心', status:'启用', last:'09:30'},
+    {name:'赵敏', account:'zhao.min', role:'审计员', apps:'全局只读', status:'启用', last:'08:55'}
+  ],
+  instances:[
+    {env:'dev', name:'tongncs-dev-01', addr:'10.20.1.11:8848', health:'健康', latency:'18ms'},
+    {env:'staging', name:'tongncs-stg-01', addr:'10.20.2.11:8848', health:'健康', latency:'24ms'},
+    {env:'prod', name:'tongncs-prod-01', addr:'10.20.3.11:8848', health:'健康', latency:'31ms'}
+  ],
+  bindings:[
+    {app:'支付网关', env:'prod', group:'支付治理群', webhook:'已绑定', last:'09:12'},
+    {app:'订单服务', env:'staging', group:'订单研发群', webhook:'已绑定', last:'08:40'},
+    {app:'风控服务', env:'prod', group:'风控值班群', webhook:'待验证', last:'—'}
+  ],
+  notifications:[
+    {title:'直连变更告警：payment.retry', body:'prod 环境发现未授权修改，已通知应用负责人', time:'4 分钟前', read:false},
+    {title:'待你审批：CR-20261122-0007', body:'高风险变更，仅应用负责人可审批', time:'36 分钟前', read:false},
+    {title:'发布结果不确定：CR-20261121-0012', body:'请进入对账，禁止自动重试', time:'18 小时前', read:true}
+  ],
+  sync:[
+    {id:'payment.timeout', dataId:'payment.timeout', dev:'2000', staging:'3000', prod:'3000', diff:true},
+    {id:'payment.retry', dataId:'payment.retry', dev:'2', staging:'2', prod:'2', diff:false},
+    {id:'payment.pool.size', dataId:'payment.pool.size', dev:'20', staging:'40', prod:'40', diff:true},
+    {id:'payment.merchant.key', dataId:'payment.merchant.key', dev:'••••••', staging:'••••••', prod:'••••••', diff:false, sensitive:true}
+  ]
+};
+
+/* ============ helpers ============ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const icon = n => `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">${ICON[n]||''}</svg>`;
+const chg = no => DATA.changes.find(c => c.no === no);
+const cfg = id => DATA.configs.find(c => c.id === id);
+const pill = (st) => { const [t,k] = ST[st] || [st,'mute']; return `<span class="pill ${k}">${t}</span>`; };
+const risk = lvl => `<span class="risk ${RISKC[lvl]||'low'}"><span class="risk-bars"><i></i><i></i><i></i></span><span>${lvl}</span></span>`;
+const envTag = e => `<span class="pill mute">${(ENV[e]||{label:e}).label}</span>`;
+const short = s => s.length > 34 ? s.slice(0,32)+'…' : s;
+
+function toast(msg, kind=''){
+  const el = document.createElement('div');
+  el.className = 'toast ' + kind;
+  el.innerHTML = `<b>${kind==='bad'?'ERROR':kind==='warn'?'ATTENTION':'AUDIT WRITTEN'}</b>${esc(msg)}`;
+  $('#toast-root').appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateY(6px)'; el.style.transition='.3s'; setTimeout(()=>el.remove(),320); }, 3400);
+}
+let modalActions = [];
+function openModal(title, body, actions=[], wide=false){
+  modalActions = actions;
+  $('#modal-root').innerHTML = `<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal" style="${wide?'width:min(780px,100%)':''}">
+    <div class="modal-h"><h3>${esc(title)}</h3><button class="x" onclick="closeModal()" aria-label="关闭">✕</button></div>
+    <div class="modal-b">${body}</div>
+    <div class="modal-f">${actions.map((a,i)=>`<button class="btn ${a.primary?'primary':''} ${a.danger?'danger':''}" onclick="modalAction(${i})">${esc(a.label)}</button>`).join('')}</div>
+  </div></div>`;
+}
+function closeModal(){ $('#modal-root').innerHTML=''; modalActions=[]; }
+function modalAction(i){
+  const a = modalActions[i];
+  if(a && a.onClick && a.onClick() === false) return;
+  closeModal();
+}
+
+function renderNav(){
+  const active = state.view === 'change' ? 'changes' : state.view;
+  $('#nav').innerHTML = NAV.map(g => `<div class="nav-group tiny">${g.label}</div>` + g.items.map(([v,l,i])=>
+    `<button class="nav-item ${active===v?'on':''}" onclick="go('${v}')">${icon(v)}<span>${l}</span><em class="idx">${i}</em></button>`
+  ).join('')).join('');
+}
+function renderEnv(){
+  $('#envSwitch').innerHTML = Object.entries(ENV).map(([k,e])=>
+    `<button class="${state.env===k?'on':''}" onclick="setEnv('${k}')"><i class="hdot ${e.health==='ok'?'':e.health==='warn'?'warn':'bad'}"></i>${e.label}</button>`
+  ).join('');
+}
+const VIEW_NAMES = {workbench:'工作台',catalog:'配置目录',changes:'变更单',approvals:'审批中心',releases:'发布控制台',envsync:'跨环境同步',recycle:'回收站',audit:'审计与检测',admin:'管理与设置',schedules:'定时任务',batches:'批量变更'};
+function crumb(){
+  if(state.view==='change') return `变更 <i>/</i> <b>${state.changeNo}</b>`;
+  const grp = ['audit'].includes(state.view)?'监督':['releases','envsync','recycle'].includes(state.view)?'发布':['admin'].includes(state.view)?'管理':'治理';
+  return `${grp} <i>/</i> <b>${VIEW_NAMES[state.view]||''}</b>`;
+}
+function render(){
+  renderNav(); renderEnv();
+  $('#crumb').innerHTML = crumb();
+  $('#view').innerHTML = (VIEWS[state.view] || VIEWS.workbench)();
+}
+function go(v){
+  state.view = v; state.changeNo = null; state.tab='overview';
+  if(v==='changes'){ /* keep */ }
+  render();
+  $('#view').scrollTop = 0;
+}
+function openChange(no){
+  state.view='change'; state.changeNo=no; state.tab='overview'; state.releaseRun=null;
+  render(); $('#view').scrollTop=0;
+}
+function setEnv(e){
+  state.env = e;
+  state.cfgSel = [];
+  const first = DATA.configs.find(c=>c.env===e && c.app===state.treeApp) || DATA.configs.find(c=>c.env===e);
+  if(first) state.selConfig = first.id;
+  render();
+  toast(`已切换到 ${ENV[e].label} · ${ENV[e].name}，实例 ${ENV[e].latency}`);
+}
+function setTab(t){ state.tab=t; render(); }
+function setDiff(m){ state.diff=m; render(); }
+function selectConfig(id){ state.selConfig=id; render(); }
+function goGroup(app, group){
+  state.treeApp=app; state.group=group; state.cfgSel=[];
+  const first = DATA.configs.find(c=>c.env===state.env && c.app===app && (group==='全部'||c.group===group));
+  if(first) state.selConfig=first.id;
+  render();
+}
+
+/* ============ config → change ============ */
+let changeSeq = 100, batchSeq = 100;
+function nowStamp(){
+  const d = new Date(), p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function today(){ return nowStamp().slice(0,10).replace(/-/g,''); }
+function nextChangeNo(){ changeSeq++; return `CR-${today()}-${String(changeSeq).padStart(4,'0')}`; }
+function nextBatchNo(){ batchSeq++; return `BAT-${today()}-${String(batchSeq).padStart(4,'0')}`; }
+function hash8(s){
+  let h = 2166136261;
+  for(let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h,16777619); }
+  return (h>>>0).toString(16).padStart(8,'0');
+}
+function toggleCfgSel(id){
+  const i = state.cfgSel.indexOf(id);
+  if(i>=0) state.cfgSel.splice(i,1); else state.cfgSel.push(id);
+  render();
+}
+function toggleCfgSelAll(csv){
+  const ids = String(csv||'').split(',').filter(Boolean);
+  const all = ids.length && ids.every(id=>state.cfgSel.includes(id));
+  state.cfgSel = all ? state.cfgSel.filter(id=>!ids.includes(id)) : [...new Set([...state.cfgSel,...ids])];
+  render();
+}
+function clearCfgSel(){ state.cfgSel=[]; render(); }
+function contentOf(f, values, maskSensitive=true){
+  values = values || {};
+  const sep = f.format==='PROPERTIES' ? '=' : ': ';
+  return `# ${f.dataId}\n` + f.items.map(it=>{
+    let v = Object.prototype.hasOwnProperty.call(values,it.key) ? values[it.key] : it.value;
+    if(it.sensitive && maskSensitive) v = '********';
+    return `${it.key}${sep}${v}`;
+  }).join('\n');
+}
+function fmtPill(fmt){
+  const cls = fmt==='PROPERTIES' ? 'warn' : fmt==='YAML' ? 'run' : 'mute';
+  return `<span class="pill ${cls}" style="margin-left:6px">${esc(fmt||'TEXT')}</span>`;
+}
+function itemInputs(f, prefix, prefill){
+  prefill = prefill || {};
+  return f.items.map((it,i)=>{
+    const val = Object.prototype.hasOwnProperty.call(prefill,it.key) ? prefill[it.key] : (it.sensitive?'':it.value);
+    return `<div class="item-edit">
+      <div><div class="mono" style="font-size:11px">${esc(it.key)}</div><div class="tiny" style="text-transform:none">${esc(it.desc)}</div></div>
+      <div class="mono tiny" style="color:var(--muted)">${it.sensitive?'••••••':esc(it.value)}</div>
+      <input id="${prefix}-${i}" value="${esc(val)}" placeholder="${it.sensitive?'输入新值（当前脱敏）':'新值'}">
+    </div>`;
+  }).join('');
+}
+function readItemValues(f, prefix){
+  const out = {};
+  f.items.forEach((it,i)=>{
+    const el = document.getElementById(prefix+'-'+i);
+    if(!el) return;
+    const v = el.value.trim();
+    if(it.sensitive){ if(v!=='') out[it.key]=v; }
+    else if(v!==it.value) out[it.key]=v;
+  });
+  return out;
+}
+function changesOf(f, values){
+  return Object.keys(values).map(k=>{
+    const it = f.items.find(x=>x.key===k);
+    return {key:k, from:it&&it.sensitive?'••••••':(it?it.value:''), to:it&&it.sensitive?'••••••':values[k], sensitive:!!(it&&it.sensitive)};
+  });
+}
+function startChange(id){
+  const f = cfg(id);
+  if(!f){ toast('请先在配置目录选择一个 DataId','bad'); return; }
+  const active = DATA.changes.find(x=>x.fileId===f.id &&
+    ['PENDING_APPROVAL','APPROVED','SCHEDULED','RELEASING','INDETERMINATE'].includes(x.status));
+  openModal('发起变更 · '+f.dataId, `
+    <div class="banner info"><span class="bicon">i</span><div><b>一次变更 = 一个 DataId 文件</b><br>文件内可改多个配置项；草稿不写 TongNCS，提交时才冻结基线。</div></div>
+    ${active?`<div class="banner warn"><span class="bicon">!</span><div><b>该 DataId 已有进行中变更单 ${active.no}</b><br>草稿可以保存，但提交时会被阻断；请先处理已有变更单。</div></div>`:''}
+    <div class="kv" style="grid-template-columns:1fr 1fr 1fr 1fr">
+      <div><dt>DataId</dt><dd class="mono">${esc(f.dataId)}</dd></div>
+      <div><dt>格式</dt><dd>${fmtPill(f.format)}</dd></div>
+      <div><dt>配置项</dt><dd>${f.items.length} 项</dd></div>
+      <div><dt>当前 MD5</dt><dd class="mono">${f.md5}</dd></div>
+    </div>
+    <div class="tiny" style="margin:12px 0 2px">配置项（只填要改的值；留空或保持原值表示不变）</div>
+    ${itemInputs(f,'chg')}
+    <label>变更原因（至少 10 个字）</label>
+    <textarea id="chg-reason" placeholder="说明为什么改、涉及哪些配置项、影响范围与回滚方式"></textarea>
+    <div class="err" id="chg-err"></div>`,
+    [{label:'取消'},{label:'创建草稿',primary:true,onClick:()=>{
+      const values = readItemValues(f,'chg');
+      const chs = changesOf(f,values);
+      const r = (document.getElementById('chg-reason')||{}).value || '';
+      if(!chs.length){ document.getElementById('chg-err').textContent='至少修改一个配置项'; return false; }
+      if(r.trim().length<10){ document.getElementById('chg-err').textContent='变更原因至少 10 个字'; return false; }
+      const no = nextChangeNo();
+      DATA.changes.unshift({
+        no, title:`${f.dataId} · ${chs.length} 项变更`, app:f.app, env:f.env, group:f.group,
+        fileId:f.id, dataId:f.dataId, itemChanges:chs,
+        type:'UPDATE', status:'DRAFT', risk:f.env==='prod'?'中':'低', submitter:CURRENT_USER, owner:f.owner,
+        baseline:'—', draft:hash8(JSON.stringify(values)+f.md5), current:f.md5, drift:false,
+        submitted:'—', scheduled:'—', reason:r,
+        impact:{instances:0, apps:0, unknown:true, owners:[f.owner]},
+        baseContent:contentOf(f), draftContent:contentOf(f,values), sensitiveChanged:chs.some(x=>x.sensitive)
+      });
+      openChange(no);
+      toast('草稿已创建：未写入 TongNCS，提交时冻结基线');
+    }}]);
+}
+function submitDraft(no){
+  const c = chg(no); if(!c) return;
+  const active = DATA.changes.find(x=>x.no!==no && x.fileId && x.fileId===c.fileId &&
+    ['PENDING_APPROVAL','APPROVED','SCHEDULED','RELEASING','INDETERMINATE'].includes(x.status));
+  if(active){ toast('同一 DataId 已有进行中变更单 '+active.no,'bad'); return; }
+  openModal('提交审批', `
+    <p>提交后将冻结基线 <b class="mono">${c.current}</b> 与影响面快照；之后 TongNCS 变化不回写已提交快照。</p>
+    <p class="dim" style="font-size:12px;margin-top:8px">一次发布写整个 DataId 文件；提交人不得审批。</p>`,
+    [{label:'取消'},{label:'提交并冻结基线',primary:true,onClick:()=>{
+      c.baseline = c.current;
+      c.status = 'PENDING_APPROVAL';
+      c.submitted = nowStamp();
+      if(c.impact.unknown && c.risk!=='高') c.risk = c.risk==='低'?'中':'高';
+      toast('已提交：基线已冻结，审计已写入');
+      render();
+    }}]);
+}
+function batchFromSelection(){
+  const sel = state.cfgSel.map(cfg).filter(c=>c && c.env===state.env);
+  if(!sel.length){ toast('请先在配置目录勾选 DataId','bad'); return; }
+  const conflicts = sel.map(f=>({f, c:DATA.changes.find(x=>x.fileId===f.id &&
+    ['PENDING_APPROVAL','APPROVED','SCHEDULED','RELEASING','INDETERMINATE'].includes(x.status))})).filter(x=>x.c);
+  if(conflicts.length){
+    toast('已有进行中变更单：'+conflicts.map(x=>x.f.dataId+' → '+x.c.no).join('；'),'bad');
+    return;
+  }
+  const totalItems = sel.reduce((n,f)=>n+f.items.length,0);
+  openModal('批量发起变更', `
+    <div class="banner info"><span class="bicon">i</span><div><b>父单 + ${sel.length} 个 DataId / ${totalItems} 个配置项</b><br>一个 DataId 生成一个子项；子项仍需逐条审批与发布，允许部分成功。</div></div>
+    ${sel.map((f,fi)=>`<div class="batch-file">
+      <div class="batch-file-h"><div><div class="mono" style="font-size:12px">${esc(f.dataId)} ${fmtPill(f.format)}</div><div class="tiny">${f.items.length} 个配置项 · ${esc(f.app)} / ${(ENV[f.env]||{}).label}</div></div><span class="hash">${f.md5}</span></div>
+      ${itemInputs(f,'bat'+fi)}
+    </div>`).join('')}
+    <div class="err" id="batch-err"></div>`,
+    [{label:'取消'},{label:'创建批量草稿',primary:true,onClick:()=>{
+      const items = [];
+      sel.forEach((f,fi)=>{
+        const values = readItemValues(f,'bat'+fi);
+        const chs = changesOf(f,values);
+        if(chs.length){
+          items.push({id:nextChangeNo(), fileId:f.id, dataId:f.dataId, status:'待提交',
+            changes:chs, values, baseContent:contentOf(f), draftContent:contentOf(f,values),
+            sensitiveChanged:chs.some(x=>x.sensitive)});
+        }
+      });
+      if(!items.length){ document.getElementById('batch-err').textContent='至少在一个配置项里填写新值'; return false; }
+      const b = {id:nextBatchNo(), title:`${sel[0].app} 批量调整（${items.length} 个 DataId）`, env:state.env,
+        total:items.length, ok:0, fail:0, status:'DRAFT', items};
+      DATA.batches.unshift(b);
+      state.batchId = b.id; state.cfgSel = [];
+      go('batches');
+      toast('已创建批量草稿：父单 + '+items.length+' 个 DataId 子项');
+    }}]);
+}
+function curBatch(){ return DATA.batches.find(x=>x.id===state.batchId) || DATA.batches[0]; }
+function editBatchItem(i){
+  const b = curBatch(); const it = b && b.items[i];
+  const f = it && cfg(it.fileId);
+  if(!f){ toast('该子项的目标 DataId 不存在','bad'); return; }
+  const prefill = {};
+  (it.changes||[]).forEach(ch=>{ if(!ch.sensitive) prefill[ch.key]=ch.to; });
+  openModal('编辑值 · '+it.dataId, `
+    <div class="banner info"><span class="bicon">i</span><div>子项发布时写整个 DataId；敏感项需重新输入，未填表示保持当前值。</div></div>
+    ${itemInputs(f,'bedit',prefill)}
+    <div class="err" id="bedit-err"></div>`,
+    [{label:'取消'},{label:'保存值',primary:true,onClick:()=>{
+      const values = readItemValues(f,'bedit');
+      const chs = changesOf(f,values);
+      if(!chs.length){ document.getElementById('bedit-err').textContent='至少修改一个配置项'; return false; }
+      it.changes = chs; it.values = values;
+      it.baseContent = contentOf(f); it.draftContent = contentOf(f,values);
+      it.sensitiveChanged = chs.some(x=>x.sensitive);
+      toast('批量子项的值已更新'); render();
+    }}]);
+}
+function submitBatch(){
+  const b = curBatch();
+  if(!b || b.status!=='DRAFT') return;
+  openModal('提交批量审批', `
+    <p>父单提交后，<b>${b.total}</b> 个 DataId 子项一起进入审批；发布时仍按 DataId 逐个写入并读回，允许部分成功。</p>
+    <p class="dim" style="font-size:12px;margin-top:8px">父单按最高风险审批；高风险子项由应用负责人审批。</p>`,
+    [{label:'取消'},{label:'提交审批',primary:true,onClick:()=>{
+      b.status = 'PENDING_APPROVAL';
+      b.items.forEach(it=>{ if(it.status==='待提交') it.status='待审批'; });
+      toast('批量父单已提交审批');
+      render();
+    }}]);
+}
+
+/* ============ workbench ============ */
+let VIEWS = {};
+VIEWS.workbench = function(){
+  const pending = DATA.changes.filter(c=>c.status==='PENDING_APPROVAL');
+  const recent = DATA.releases.slice(0,4);
+  return `
+  <div class="hero stagger">
+    <div>
+      <div class="eyebrow">GOVERNANCE CONTROL · 2026-11-22 · SATURDAY</div>
+      <h1>配置治理<br><em>控制台</em></h1>
+      <p class="lede">TongNCS 是配置内容的唯一事实源。这里只做治理：变更单、审批、发布编排、审计与直连检测。任何写入都必须经过唯一写入口，并读回校验。</p>
+    </div>
+    <div class="hero-side">
+      <div class="dial"><div class="dial-in"><b>${pending.length}</b><span>待审批 · 1 高风险</span></div></div>
+      <div class="tiny">TongNCS · 3 / 3 INSTANCES HEALTHY</div>
+    </div>
+  </div>
+  <div class="metrics stagger">
+    <div class="metric a"><div class="metric-label">待我审批</div><div class="metric-val">${pending.length}<small> 单</small></div><div class="metric-foot">其中 1 单仅应用负责人可批</div></div>
+    <div class="metric v"><div class="metric-label">进行中变更</div><div class="metric-val">6<small> 单</small></div><div class="metric-foot">2 单已通过 / 1 单结果不确定</div></div>
+    <div class="metric r"><div class="metric-label">直连告警</div><div class="metric-val">1<small> 起</small></div><div class="metric-foot">最近发现 4 分钟前 · prod</div></div>
+    <div class="metric c"><div class="metric-label">审计链</div><div class="metric-val">12.8<small>k</small></div><div class="metric-foot">今日链完整 · 08:12 校验</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-h"><h3>待我审批</h3><span class="tiny">按提交时间</span></div>
+      ${pending.map(c=>`<div class="approval-row">
+        <div><div class="t">${esc(c.title)}</div><div class="m"><span>${c.no}</span><span>${c.app}</span><span>${(ENV[c.env]||{}).label||c.env}</span><span>${esc(c.submitter)} 提交</span></div></div>
+        <div style="display:flex;align-items:center;gap:12px">${risk(c.risk)}<button class="btn" onclick="openChange('${c.no}')">审阅</button></div>
+      </div>`).join('')}
+      <div style="margin-top:12px"><span class="link" onclick="go('approvals')">进入审批中心 →</span></div>
+    </div>
+    <div style="display:grid;gap:14px">
+      <div class="alert-card">
+        <div class="k">DIRECT CHANGE · 4 MIN AGO</div>
+        <h3>prod / payment.retry 出现未授权修改</h3>
+        <p>与平台发布记录不匹配，已通过企业微信群与站内通知 @ 周启。检测窗口 5 分钟。</p>
+        <button class="btn danger" onclick="go('audit')">查看证据</button>
+      </div>
+      <div class="card">
+        <div class="card-h"><h3>最近发布</h3><span class="tiny">三态结果</span></div>
+        ${recent.map(r=>`<div class="release-row"><span class="id">${r.id.slice(-8)}</span><span class="t">${r.change}</span>${pill(r.status==='verified'?'SUCCEEDED':r.status==='rejected'?'FAILED':'INDETERMINATE')}</div>`).join('')}
+        <div style="margin-top:10px"><span class="link" onclick="go('releases')">发布控制台 →</span></div>
+      </div>
+    </div>
+  </div>`;
+};
+
+/* ============ catalog ============ */
+VIEWS.catalog = function(){
+  const configs = DATA.configs.filter(c=>c.env===state.env);
+  const apps = [...new Set(configs.map(c=>c.app))];
+  if(!apps.includes(state.treeApp)) state.treeApp = apps[0] || '';
+  const groups = [...new Set(configs.filter(c=>c.app===state.treeApp).map(c=>c.group))];
+  const rows = configs.filter(c=>c.app===state.treeApp && (state.group==='全部'||c.group===state.group));
+  let sel = cfg(state.selConfig);
+  if(!sel || sel.env!==state.env || !rows.some(r=>r.id===sel.id)) sel = rows[0] || configs[0];
+  return `
+  <div class="page-head"><div><h2>配置目录</h2><p>应用 → 环境 → 分组 → DataId（配置文件）→ 配置项。按后缀识别 PROPERTIES / YAML（含 yml）/ JSON / TEXT；目录只是索引，值实时读取 TongNCS；快照必须标注采集时间。</p></div>
+    <div style="display:flex;gap:8px;align-items:center"><span class="snapshot-note"><i class="hdot"></i>实时读取 · 采集于 12 秒前</span><button class="btn" onclick="go('envsync')">跨环境对比</button></div>
+  </div>
+  <div class="catalog">
+    <div class="tree">
+      ${apps.map(a=>`<div class="tree-app" onclick="goGroup('${a}','全部')"><b>${a}</b><span class="cnt">${configs.filter(c=>c.app===a).length}</span></div>
+        ${a===state.treeApp ? groups.map(g=>`<div class="tree-sub ${state.group===g?'on':''}" onclick="goGroup('${a}','${g}')"><span>${g}</span><span>${configs.filter(c=>c.app===a&&c.group===g).length}</span></div>`).join('') : ''}
+      `).join('')}
+    </div>
+    <div class="cfg-table-wrap">
+      <div class="cfg-toolbar">
+        <div class="path">${(ENV[state.env]||{}).label} / ${state.treeApp} / ${state.group}</div>
+        <div style="display:flex;gap:7px"><button class="btn" onclick="toast('已复制目录路径')">复制路径</button><button class="btn primary" onclick="startChange('${sel?sel.id:''}')">发起变更</button></div>
+      </div>
+      ${state.cfgSel.length?`<div class="selbar"><b>${state.cfgSel.length}</b> 个 DataId 已选<span class="tiny">一个 DataId 一个子项；批量只创建草稿，不直接写 TongNCS</span><span class="spacer"></span><button class="btn" onclick="clearCfgSel()">清除</button><button class="btn primary" onclick="batchFromSelection()">批量发起变更</button></div>`:''}
+      <table>
+        <thead><tr><th class="cfg-check"><input type="checkbox" ${rows.length&&rows.every(r=>state.cfgSel.includes(r.id))?'checked':''} onclick="toggleCfgSelAll('${rows.map(r=>r.id).join(',')}')"></th><th>DATA ID</th><th>配置项</th><th>归属</th><th>最近更新</th><th>MD5</th></tr></thead>
+        <tbody>${rows.map(c=>`<tr class="cfg-row ${sel&&c.id===sel.id?'on':''}" onclick="selectConfig('${c.id}')">
+          <td class="cfg-check"><input type="checkbox" ${state.cfgSel.includes(c.id)?'checked':''} onclick="event.stopPropagation();toggleCfgSel('${c.id}')"></td>
+          <td><div class="mono" style="font-size:12px">${esc(c.dataId)} ${fmtPill(c.format)}</div><div class="tiny" style="letter-spacing:.02em;text-transform:none">${esc(c.desc)}</div></td>
+          <td><div class="mono" style="font-size:12px">${c.items.length} 项</div><div class="tiny" style="text-transform:none">${c.items.slice(0,2).map(i=>esc(i.key)).join(' · ')}${c.items.length>2?' …':''}</div>${c.items.some(i=>i.sensitive)?'<span class="pill warn" style="margin-top:4px">含敏感项</span>':''}</td>
+          <td>${esc(c.owner)}</td><td class="mono" style="font-size:10px;color:var(--dim)">${c.updated}</td>
+          <td><span class="hash">${c.md5}</span></td>
+        </tr>`).join('') || `<tr><td colspan="6"><div class="empty"><b>该分组暂无 DataId</b>检查环境或分组选择。</div></td></tr>`}</tbody>
+      </table>
+    </div>
+    <div class="cfg-detail">
+      ${sel ? `
+      <div class="detail-tag">DATAID DETAIL · ${(ENV[sel.env]||{}).label}</div>
+      <h3>${esc(sel.dataId)}</h3>
+      <p class="dim" style="font-size:12px;margin-top:4px">${esc(sel.desc)}</p>
+      <div class="kv" style="grid-template-columns:1fr 1fr;margin-top:12px">
+        <div><dt>应用</dt><dd>${esc(sel.app)}</dd></div>
+        <div><dt>环境</dt><dd>${(ENV[sel.env]||{}).label}</dd></div>
+        <div><dt>负责人</dt><dd>${esc(sel.owner)}</dd></div>
+        <div><dt>格式</dt><dd>${fmtPill(sel.format)}</dd></div>
+        <div><dt>MD5</dt><dd class="mono" style="font-size:11px">${sel.md5}</dd></div>
+      </div>
+      <div class="tiny" style="margin-top:14px">配置项 · ${sel.items.length} 项</div>
+      <div class="item-list">
+        ${sel.items.map(it=>{
+          const rid = sel.id+'#'+it.key, open = state.revealed===rid;
+          return `<div class="item-row">
+            <div><div class="mono" style="font-size:11px">${esc(it.key)}</div><div class="tiny" style="text-transform:none">${esc(it.desc)}</div></div>
+            <div class="mono" style="font-size:11px;color:${it.sensitive?'var(--muted)':'var(--text)'}">${it.sensitive?(open?esc(it.real):'••••••'):esc(it.value)}</div>
+            ${it.sensitive?`<button class="btn" onclick="requestSensitive('${sel.id}','${it.key}')">查看</button>`:''}
+          </div>`;
+        }).join('')}
+      </div>
+      ${sel.items.some(i=>i.sensitive)?`<div class="snapshot-note"><i class="hdot warn"></i>含敏感项；明文按项授权查看，30 秒后自动脱敏</div>`:''}
+      <div class="value-actions">
+        <button class="btn primary" onclick="startChange('${sel.id}')">发起变更</button>
+        <button class="btn" onclick="toast('已打开历史版本（演示）')">历史版本</button>
+      </div>` : `<div class="empty"><b>未选择 DataId</b>从左侧目录选择一项。</div>`}
+    </div>
+  </div>`;
+};
+
+/* ============ sensitive / approvals ============ */
+const CURRENT_USER = '周启';
+let revealTimer = null;
+
+function requestSensitive(id, key){
+  const f = cfg(id);
+  const it = f && f.items.find(x=>x.key===key);
+  if(!it) return;
+  openModal('查看敏感值明文', `
+    <div class="banner warn"><span class="bicon">!</span><div><b>该操作将写入审计</b><span class="code">CONFIG_SENSITIVE_VIEW</span><br>审计将记录操作人、原因、来源 IP 与对象；明文 30 秒后自动重新脱敏。</div></div>
+    <p>对象：<b>${esc(f.dataId)}</b> / <span class="mono">${esc(key)}</span> · ${esc(f.app)} / ${(ENV[f.env]||{}).label}</p>
+    <label>查看原因（至少 10 个字）</label>
+    <textarea id="sens-reason" placeholder="例如：排查商户验签失败，需要核对密钥版本" oninput="document.getElementById('sens-count').textContent=this.value.length+'/10'"></textarea>
+    <div class="hint"><span>仅授权用户可见，禁止截图外传</span><span id="sens-count">0/10</span></div>
+    <div class="err" id="sens-err"></div>`,
+    [{label:'取消'},{label:'确认查看',primary:true,onClick:()=>{
+      const v = (document.getElementById('sens-reason')||{}).value || '';
+      if(v.trim().length < 10){ document.getElementById('sens-err').textContent='查看原因至少 10 个字'; return false; }
+      const rid = f.id+'#'+key;
+      state.revealed = rid;
+      render();
+      toast('已展示明文，查看原因已写入审计');
+      clearTimeout(revealTimer);
+      revealTimer = setTimeout(()=>{ if(state.revealed===rid){ state.revealed=null; render(); } }, 30000);
+    }}]);
+}
+
+function approve(no){
+  const c = chg(no);
+  openModal('确认通过审批', `
+    <p>单人会签：1 名合格审批人通过即可。通过后持续有效，直到基线变化或发布完成。</p>
+    <div class="kv" style="margin-top:10px">
+      <div><dt>变更单</dt><dd class="mono">${c.no}</dd></div>
+      <div><dt>风险</dt><dd>${c.risk} · ${(ENV[c.env]||{}).label}</dd></div>
+      <div><dt>提交人</dt><dd>${esc(c.submitter)}</dd></div>
+      <div><dt>基线</dt><dd class="mono">${c.baseline}</dd></div>
+    </div>`,
+    [{label:'取消'},{label:'确认通过',primary:true,onClick:()=>{
+      c.status='APPROVED';
+      toast('审批通过：审批记录与审计已同事务写入');
+      render();
+    }}]);
+}
+function reject(no){
+  openModal('驳回变更', `
+    <p>驳回必须填写理由，理由会展示给提交人并写入审计。</p>
+    <label>驳回理由（至少 10 个字）</label>
+    <textarea id="rej-reason" oninput="document.getElementById('rej-count').textContent=this.value.length+'/10'"></textarea>
+    <div class="hint"><span>APR-422-001</span><span id="rej-count">0/10</span></div>
+    <div class="err" id="rej-err"></div>`,
+    [{label:'取消'},{label:'确认驳回',danger:true,onClick:()=>{
+      const v = (document.getElementById('rej-reason')||{}).value || '';
+      if(v.trim().length < 10){ document.getElementById('rej-err').textContent='驳回理由至少 10 个字（APR-422-001）'; return false; }
+      const c = chg(no); c.status='DRAFT';
+      toast('已驳回，理由与审计已写入','warn');
+      render();
+    }}]);
+}
+function transfer(no){
+  openModal('转交审批', `
+    <p>只能转交给具备该应用 × 环境审批权限且未参与本变更的人。</p>
+    <label>转交对象</label>
+    <select style="width:100%"><option>陈默 · 编辑者（不合格：无审批权）</option><option>周启 · 应用负责人（合格）</option><option>赵敏 · 审计员（不合格）</option></select>
+    <div class="banner info" style="margin-top:12px"><span class="bicon">i</span><div>转交对象不合格时，确认按钮不可用；本原型仅演示交互。</div></div>`,
+    [{label:'取消'},{label:'确认转交',primary:true,onClick:()=>toast('已转交，转交动作已写入审计')}]);
+}
+
+/* ============ changes ============ */
+VIEWS.changes = function(){
+  const f = state.changeFilter || 'all';
+  const filters = [['all','全部'],['DRAFT','草稿'],['PENDING_APPROVAL','待审批'],['APPROVED','已通过'],['SCHEDULED','已定时'],['SUCCEEDED','已发布'],['INDETERMINATE','不确定']];
+  const rows = DATA.changes.filter(c=>f==='all'||c.status===f);
+  return `
+  <div class="page-head"><div><h2>变更单</h2><p>每一次配置修改都收敛为变更单。草稿只存在平台；提交时冻结基线，发布前重新校验。</p></div>
+    <button class="btn primary" onclick="startChange(state.selConfig)">+ 新建变更</button>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+    ${filters.map(([k,l])=>`<button class="btn ${f===k?'primary':''}" onclick="state.changeFilter='${k}';render()">${l}</button>`).join('')}
+  </div>
+  <div class="card" style="padding:6px 16px 10px">
+    <table>
+      <thead><tr><th>变更单</th><th>目标配置</th><th>环境</th><th>状态</th><th>风险</th><th>提交人</th><th>计划发布</th></tr></thead>
+      <tbody>${rows.map(c=>`<tr class="click" onclick="openChange('${c.no}')">
+        <td><div class="mono" style="font-size:10.5px;color:var(--muted)">${c.no}</div><div style="font-size:12.5px;margin-top:2px">${esc(c.title)}</div></td>
+        <td><div class="mono" style="font-size:11px">${c.dataId}</div><div class="tiny" style="text-transform:none;letter-spacing:0">${c.app} / ${c.group}</div></td>
+        <td>${envTag(c.env)}</td>
+        <td>${pill(c.status)}${c.drift?' <span class="pill bad">基线漂移</span>':''}</td>
+        <td>${risk(c.risk)}</td>
+        <td>${esc(c.submitter)}</td>
+        <td class="mono" style="font-size:10px;color:var(--dim)">${c.scheduled}</td>
+      </tr>`).join('') || `<tr><td colspan="7"><div class="empty"><b>没有符合条件的变更单</b>切换状态筛选，或新建一张变更单。</div></td></tr>`}</tbody>
+    </table>
+  </div>`;
+};
+
+function diffData(c){
+  const oldV = c.dataId.includes('timeout')?'3000':c.dataId.includes('pool')?'40':c.dataId.includes('enabled')?'false':'2';
+  const newV = c.dataId.includes('timeout')?'5000':c.dataId.includes('pool')?'60':c.dataId.includes('enabled')?'true':'3';
+  const base = c.baseContent ? c.baseContent.split('\n') : [`# ${c.dataId}`, `${c.group}:`, `  value: ${oldV}`, `  retry: 2`, `  enabled: true`];
+  const draft = c.draftContent ? c.draftContent.split('\n') : [`# ${c.dataId}`, `${c.group}:`, `  value: ${newV}`, `  retry: 2`, `  enabled: true`];
+  const cur = c.drift ? [`# ${c.dataId}`, `${c.group}:`, `  value: ${oldV}`, `  retry: 4`, `  enabled: true`] : [...base];
+  return {base, draft, cur};
+}
+function diffCol(title, lines, kind, other){
+  return `<div class="diff-col"><div class="diff-col-h"><b>${title}</b><span>${lines.length} lines</span></div>
+    ${lines.map((l,i)=>{
+      let cls='same';
+      if(l!==other[i]) cls = kind==='基线'?'del':kind==='草稿'?'add':'mod';
+      return `<div class="diff-line ${cls}"><span class="ln">${i+1}</span><span class="tx">${esc(l)}</span></div>`;
+    }).join('')}
+  </div>`;
+}
+function overviewPanel(c){
+  const doneSubmit = c.status!=='DRAFT';
+  const doneApprove = ['APPROVED','SCHEDULED','SUCCEEDED','INDETERMINATE'].includes(c.status);
+  return `
+  <div class="kv" style="margin-bottom:16px">
+    <div><dt>变更单号</dt><dd class="mono">${c.no}</dd></div>
+    <div><dt>目标配置</dt><dd class="mono">${c.dataId}</dd></div>
+    <div><dt>变更类型</dt><dd>${c.type} · ${esc(c.reason)}</dd></div>
+    <div><dt>计划发布时间</dt><dd>${c.scheduled}</dd></div>
+    <div><dt>基线 MD5</dt><dd class="mono">${c.baseline}</dd></div>
+    <div><dt>草稿 MD5</dt><dd class="mono">${c.draft}</dd></div>
+    <div><dt>提交人</dt><dd>${esc(c.submitter)}</dd></div>
+    <div><dt>应用负责人</dt><dd>${esc(c.owner)}</dd></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-h"><h3>生命周期</h3><span class="tiny">状态机驱动</span></div>
+      <div class="timeline">
+        <div class="tl done"><b>草稿创建</b><p>只保存在平台，不写入 TongNCS</p><div class="tm">2026-11-22 09:58</div></div>
+        <div class="tl ${doneSubmit?'done':'now'}"><b>提交并冻结基线</b><p>基线 ${c.baseline} · 影响面快照已保存</p><div class="tm">${c.submitted}</div></div>
+        <div class="tl ${doneApprove?'done':c.status==='PENDING_APPROVAL'?'now':''}"><b>审批</b><p>${doneApprove?'单人会签通过':'等待合格审批人；提交人不得审批'}</p></div>
+        <div class="tl ${c.status==='SUCCEEDED'?'done':c.status==='APPROVED'?'now':''}"><b>发布与读回</b><p>${c.status==='SUCCEEDED'?'读回一致，已生成发布记录':'写入 TongNCS 后立即读回比对 MD5'}</p></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>影响摘要</h3><span class="tiny">提交时快照</span></div>
+      <div class="impact-stats" style="grid-template-columns:1fr 1fr;margin-bottom:10px">
+        <div><b>${c.impact.instances}</b><span>订阅实例</span></div>
+        <div><b>${c.impact.apps}</b><span>涉及应用</span></div>
+        <div><b>${c.impact.owners.length}</b><span>负责人</span></div>
+        <div><b style="color:${c.risk==='高'?'var(--red)':c.risk==='中'?'var(--amber)':'var(--green)'}">${c.risk}</b><span>风险等级</span></div>
+      </div>
+      ${c.impact.unknown?'<div class="banner warn" style="margin:0"><span class="bicon">!</span><div>监听查询不可用，影响面显示“未知”，风险已上调一级。</div></div>':'<p class="dim" style="font-size:12px">负责人：'+c.impact.owners.map(esc).join('、')+'；失败将影响 '+c.impact.instances+' 个订阅实例。</p>'}
+    </div>
+  </div>`;
+}
+function diffPanel(c){
+  const d = diffData(c);
+  return `
+  ${c.drift?'<div class="banner bad"><span class="bicon">!</span><div><b>基线已变化，变更单已退回待审批</b><span class="code">REL-412-001</span><br>当前值与提交时冻结的基线不一致，必须重新审批。下方为基线、草稿、当前值三方 Diff。</div></div>':''}
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
+    <div class="tiny">THREE-WAY DIFF · ${c.dataId}</div>
+    <div class="seg"><button class="${state.diff==='split'?'on':''}" onclick="setDiff('split')">三栏</button><button class="${state.diff==='unified'?'on':''}" onclick="setDiff('unified')">合并</button></div>
+  </div>
+  ${state.diff==='split'?`<div class="diff-grid">${diffCol('基线',d.base,'基线',d.draft)}${diffCol('草稿',d.draft,'草稿',d.base)}${diffCol('当前值',d.cur,'当前',d.base)}</div>`:`
+    <div class="diff-grid" style="grid-template-columns:1fr">
+      <div class="diff-col"><div class="diff-col-h"><b>统一视图</b><span>base → draft · current</span></div>
+      ${d.base.map((l,i)=>{const ch=l!==d.draft[i];return `<div class="diff-line ${ch?'del':''}"><span class="ln">${i+1}</span><span class="tx">${ch?'- ':'  '}${esc(l)}</span></div>`}).join('')}
+      ${d.draft.map((l,i)=>{const ch=l!==d.base[i];return ch?`<div class="diff-line add"><span class="ln">${i+1}</span><span class="tx">+ ${esc(l)}</span></div>`:''}).join('')}
+      ${c.drift?`<div class="diff-line mod"><span class="ln">!</span><span class="tx">当前值已偏离基线：retry 2 → 4</span></div>`:''}
+      </div>
+    </div>`}
+  <div class="diff-note"><span>基线 ${c.baseline} · 草稿 ${c.draft}</span><span>${c.drift?'当前值 '+c.current+' · 与基线不一致':'当前值 '+c.current+' · 与基线一致'}</span></div>`;
+}
+function impactPanel(c){
+  return `
+  ${c.impact.unknown?'<div class="banner warn"><span class="bicon">!</span><div><b>影响面未知</b><span class="code">IMP-409-001</span><br>TongNCS 监听查询不可用，风险自动上调一级；高风险发布已被阻断，需人工确认订阅范围。</div></div>':''}
+  <div class="impact-stats">
+    <div><b>${c.impact.instances}</b><span>订阅实例</span></div>
+    <div><b>${c.impact.apps}</b><span>涉及应用</span></div>
+    <div><b>${c.impact.owners.length}</b><span>负责人</span></div>
+    <div><b style="color:${c.risk==='高'?'var(--red)':c.risk==='中'?'var(--amber)':'var(--green)'}">${c.risk}</b><span>风险等级</span></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-h"><h3>订阅实例</h3><span class="tiny">影响面证据</span></div>
+      <table><thead><tr><th>实例</th><th>应用</th><th>负责人</th><th>最近心跳</th></tr></thead><tbody>
+        <tr><td class="mono" style="font-size:11px">10.20.3.21:8080</td><td>支付网关</td><td>周启</td><td class="mono" style="font-size:10px;color:var(--dim)">12s</td></tr>
+        <tr><td class="mono" style="font-size:11px">10.20.3.22:8080</td><td>支付网关</td><td>周启</td><td class="mono" style="font-size:10px;color:var(--dim)">14s</td></tr>
+        <tr><td class="mono" style="font-size:11px">10.20.3.31:8080</td><td>订单服务</td><td>陈默</td><td class="mono" style="font-size:10px;color:var(--dim)">9s</td></tr>
+        <tr><td class="mono" style="font-size:11px">10.20.3.41:8080</td><td>${c.impact.unknown?'未知':'结算服务'}</td><td>${c.impact.unknown?'未知':'周启'}</td><td class="mono" style="font-size:10px;color:var(--dim)">${c.impact.unknown?'—':'21s'}</td></tr>
+      </tbody></table>
+    </div>
+    <div style="display:grid;gap:12px">
+      <div class="card"><div class="card-h"><h3>风险因子</h3><span class="tiny">用户只能上调</span></div>
+        <div style="display:grid;gap:7px;font-size:12px">
+          <div style="display:flex;justify-content:space-between"><span>生产环境</span><span class="mono" style="color:var(--amber)">+2</span></div>
+          <div style="display:flex;justify-content:space-between"><span>Diff 规模</span><span class="mono" style="color:var(--amber)">+1</span></div>
+          <div style="display:flex;justify-content:space-between"><span>订阅实例 ${c.impact.instances} 个</span><span class="mono" style="color:var(--amber)">+1</span></div>
+          <div style="display:flex;justify-content:space-between"><span>近 7 天失败/回滚</span><span class="mono" style="color:var(--dim)">[Assumption, TBD]</span></div>
+        </div>
+      </div>
+      <div class="card"><div class="card-h"><h3>失败与回滚</h3></div>
+        <p class="dim" style="font-size:12px">失败会怎样：订阅实例继续使用旧值，可能造成支付超时行为不一致。</p>
+        <p style="font-size:12px;margin-top:6px">回滚路径：可回滚到上一已发布版本，发布人直接执行并事后审计。</p>
+      </div>
+    </div>
+  </div>`;
+}
+function approvalPanel(c){
+  return `<div class="grid-2"><div class="card">
+    <div class="card-h"><h3>审批记录</h3><span class="tiny">单人会签</span></div>
+    <div class="timeline">
+      <div class="tl done"><b>提交</b><p>${esc(c.submitter)} · 冻结基线 ${c.baseline}</p><div class="tm">${c.submitted}</div></div>
+      ${c.status==='PENDING_APPROVAL'?`<div class="tl now"><b>等待审批</b><p>${c.submitter===CURRENT_USER?'职责分离：你是提交人，不能审批':'合格审批人：'+esc(c.owner)}</p></div>`:`<div class="tl done"><b>审批通过</b><p>${esc(c.owner)} · 单人会签</p><div class="tm">2026-11-22 10:18</div></div>`}
+      ${['SUCCEEDED','INDETERMINATE'].includes(c.status)?`<div class="tl done"><b>发布结果</b><p>${c.status==='SUCCEEDED'?'读回一致 verified':'结果不确定 indeterminate · 已进入对账'}</p></div>`:''}
+    </div>
+  </div>
+  <div class="card"><div class="card-h"><h3>职责分离</h3><span class="tiny">硬约束</span></div>
+    <p style="font-size:12.5px;margin-bottom:8px">提交人不得审批；发布人不得审批，例外是发布人为应用负责人。</p>
+    <p style="font-size:12.5px;margin-bottom:8px">高风险只能由应用负责人或其审计过的代理人审批。</p>
+    <p class="dim" style="font-size:12px">审批通过后持续有效，直到基线变化、变更单取消或发布完成；不设审批超时。</p>
+  </div></div>`;
+}
+function releasePanel(c){
+  const run = state.releaseRun && state.releaseRun.no===c.no ? state.releaseRun : null;
+  const step = run ? run.step : 6;
+  const approved = c.status==='APPROVED' || c.status==='SUCCEEDED';
+  const items = [
+    ['变更单状态为已通过', approved, approved?'':'当前 '+((ST[c.status]||[c.status])[0])],
+    ['基线一致', !c.drift, c.drift?'基线已变化':'MD5 '+c.baseline],
+    ['发布窗口', true, '全天 · 环境默认'],
+    ['TongNCS 实例可用', true, (ENV[c.env]||{}).label+' · '+(ENV[c.env]||{}).latency],
+    ['服务账号权限', true, '写权限已确认'],
+    ['发布人权限', true, 'PUBLISH · '+esc(c.owner)]
+  ];
+  const running = run && run.running;
+  const result = run && run.result;
+  const canRelease = approved && !c.drift && !running;
+  let resultHtml = '';
+  if(result){
+    const cls = result==='verified'?'ok':result==='rejected'?'bad':'warn';
+    const title = result==='verified'?'发布成功 · 读回一致':result==='rejected'?'发布失败 · 已拒绝':'结果不确定 · 进入人工对账';
+    const desc = result==='verified'?'读回 MD5 与草稿一致，发布记录与审计已写入。':result==='rejected'?'写入被 TongNCS 拒绝，未产生生效变更；可修改后重新提交。':'写入请求已发出但读回无法确认。禁止自动重试，只允许人工对账。';
+    resultHtml = `<div class="result ${cls}"><h4>${title}</h4><p>${desc}</p>
+      <div class="row"><span>发布记录 <b>${run.relId}</b></span><span>读回 MD5 <b>${result==='verified'?c.draft:'—'}</b></span><span>TraceId <b>${run.trace}</b></span></div>
+      ${result==='indeterminate' ? `<div style="margin-top:10px"><button class="btn danger" onclick="reconcile('${c.no}')">进入对账</button></div>` : ''}
+    </div>`;
+  } else if(running){
+    resultHtml = `<div class="result warn"><h4>正在发布 · 第 ${Math.min(step+1,6)} / 6 步</h4><p>写意图 → 写入 TongNCS → 读回比对。每一步结果都会写入审计。</p></div>`;
+  } else if(c.status==='INDETERMINATE'){
+    resultHtml = `<div class="result warn"><h4>此变更存在不确定结果</h4><p>REL-20261121-0041 的写入结果无法确认，已禁止自动重试；请先完成对账。</p></div>`;
+  } else if(c.status==='SUCCEEDED'){
+    resultHtml = `<div class="result ok"><h4>已发布</h4><p>发布记录 REL-20261122-0042 · 读回一致 verified。</p></div>`;
+  }
+  return `
+  <div class="precheck">
+    ${items.map(([label,ok,why],i)=>`<div class="pc ${ok?'ok':'bad'}"><span class="st">${ok?'✓':'!'}</span><span>${label}</span><span class="why">${why}</span></div>`).join('')}
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:9px"><span class="tiny">演示结果</span>
+      <div class="seg">${['verified','rejected','indeterminate'].map(o=>`<button class="${state.relOutcome===o?'on':''}" onclick="setRelOutcome('${o}')">${o}</button>`).join('')}</div>
+    </div>
+    <button class="btn primary" ${canRelease?'':'disabled'} onclick="startRelease('${c.no}')">${running?'发布中…':'执行发布'}</button>
+  </div>
+  ${!approved&&!result?'<div class="banner info" style="margin-top:14px"><span class="bicon">i</span><div>发布被阻断：变更单尚未审批通过。请先完成单人会签。</div></div>':''}
+  ${resultHtml}`;
+}
+function setRelOutcome(o){ state.relOutcome=o; refreshRelease(); }
+function refreshRelease(){
+  const c = chg(state.changeNo); const el = document.getElementById('release-panel');
+  if(c && el) el.innerHTML = releasePanel(c);
+}
+function startRelease(no){
+  const c = chg(no);
+  if(c.status!=='APPROVED'){ toast('变更单未通过审批，无法发布','bad'); return; }
+  if(state.releaseRun && state.releaseRun.running) return;
+  state.releaseRun = {no, step:0, running:true, result:null, relId:'REL-20261122-0044', trace:'7f3c9a21'};
+  refreshRelease();
+  const timer = setInterval(()=>{
+    const r = state.releaseRun;
+    if(!r || r.no!==no || !r.running){ clearInterval(timer); return; }
+    r.step++;
+    if(r.step>=6){
+      clearInterval(timer);
+      r.running = false; r.result = state.relOutcome;
+      c.status = r.result==='verified'?'SUCCEEDED':r.result==='rejected'?'FAILED':'INDETERMINATE';
+      if(r.result==='verified') toast('发布成功：读回 MD5 一致，审计已写入');
+      else if(r.result==='rejected') toast('发布失败：TongNCS 拒绝写入，已记录审计','bad');
+      else toast('结果不确定：禁止自动重试，请进入对账','warn');
+      refreshRelease();
+    } else refreshRelease();
+  }, 520);
+}
+function reconcile(no){
+  openModal('人工对账', `
+    <div class="banner warn"><span class="bicon">!</span><div><b>不确定结果只能人工处理</b><span class="code">REL-502-001</span><br>先读取 TongNCS 当前值，与草稿比对，再选择对账结论。系统不会自动重试。</div></div>
+    <div class="kv"><div><dt>变更单</dt><dd class="mono">${no}</dd></div><div><dt>当前值读取</dt><dd>需重新调用 read()</dd></div><div><dt>草稿 MD5</dt><dd class="mono">${(chg(no)||{}).draft||'—'}</dd></div><div><dt>对账人</dt><dd>${CURRENT_USER}</dd></div></div>
+    <label>对账结论</label>
+    <select style="width:100%"><option>已生效：TongNCS 当前值等于草稿</option><option>未生效：当前值仍为基线</option><option>被他人覆盖：当前值既非草稿也非基线</option></select>`,
+    [{label:'取消'},{label:'提交对账',primary:true,onClick:()=>toast('对账结论已写入审计，发布记录已更新')}]);
+}
+
+VIEWS.change = function(){
+  const c = chg(state.changeNo) || DATA.changes[0];
+  if(!c) return '<div class="empty"><b>变更单不存在</b></div>';
+  const mine = c.submitter===CURRENT_USER;
+  const canApprove = c.status==='PENDING_APPROVAL' && !mine;
+  const tabs = [['overview','概览'],['diff','三方 Diff'],['impact','影响面'],['approval','审批'],['release','发布']];
+  let body = '';
+  if(state.tab==='overview') body = overviewPanel(c);
+  else if(state.tab==='diff') body = diffPanel(c);
+  else if(state.tab==='impact') body = impactPanel(c);
+  else if(state.tab==='approval') body = approvalPanel(c);
+  else body = `<div id="release-panel">${releasePanel(c)}</div>`;
+  return `
+  <div style="margin-bottom:12px"><span class="link" onclick="go('changes')">← 返回变更单</span></div>
+  ${c.drift?'<div class="banner bad"><span class="bicon">!</span><div><b>基线已变化，发布被阻断</b><span class="code">REL-412-001</span><br>变更单已退回“待审批”，请查看三方 Diff 后重新走审批。</div></div>':''}
+  ${mine && c.status==='PENDING_APPROVAL'?'<div class="banner info"><span class="bicon">i</span><div><b>职责分离：你参与了此变更，不能审批</b><br>提交人不得审批；发布人不得审批（应用负责人例外）。</div></div>':''}
+  <div class="detail-head">
+    <div class="detail-no">${c.no} · ${c.type}</div>
+    <h2>${esc(c.title)}</h2>
+    <div class="detail-meta">
+      <span>状态 <b>${(ST[c.status]||[c.status])[0]}</b></span>
+      <span>环境 <b>${(ENV[c.env]||{}).label}</b></span>
+      <span>应用 <b>${c.app}</b></span>
+      <span>风险 <b>${c.risk}</b></span>
+      <span>提交人 <b>${esc(c.submitter)}</b></span>
+      <span>负责人 <b>${esc(c.owner)}</b></span>
+    </div>
+    <div class="action-bar">
+      ${canApprove?`<button class="btn primary" onclick="approve('${c.no}')">通过</button><button class="btn danger" onclick="reject('${c.no}')">驳回</button><button class="btn" onclick="transfer('${c.no}')">转交</button>`:''}
+      ${c.status==='APPROVED'?`<button class="btn primary" onclick="setTab('release')">执行发布</button>`:''}
+      ${c.status==='INDETERMINATE'?`<button class="btn danger" onclick="reconcile('${c.no}')">进入对账</button>`:''}
+      ${c.status==='SCHEDULED'?`<button class="btn" onclick="cancelSchedule('${c.no}')">取消定时</button>`:''}
+      ${c.status==='DRAFT'?`<button class="btn primary" onclick="submitDraft('${c.no}')">提交审批</button>`:''}
+      <span class="spacer"></span>
+      <button class="btn" onclick="setTab('diff')">查看 Diff</button>
+    </div>
+  </div>
+  <div class="tabs">${tabs.map(([k,l])=>`<button class="${state.tab===k?'on':''}" onclick="setTab('${k}')">${l}</button>`).join('')}</div>
+  ${body}`;
+};
+
+function cancelSchedule(no){
+  openModal('取消定时发布', '<p>取消后任务不再执行，变更单回到“待发布”。取消动作写入审计。</p>', [
+    {label:'返回'},{label:'确认取消',danger:true,onClick:()=>{const c=chg(no); if(c) c.status='APPROVED'; toast('定时已取消，审计已写入','warn'); render();}}
+  ]);
+}
+
+/* ============ approvals ============ */
+VIEWS.approvals = function(){
+  const pending = DATA.changes.filter(c=>c.status==='PENDING_APPROVAL');
+  return `
+  <div class="page-head"><div><h2>审批中心</h2><p>只展示你有资格审批的变更。单人会签；提交人与发布人不得审批；高风险仅应用负责人可批。</p></div>
+    <div class="tiny">${pending.length} PENDING</div>
+  </div>
+  <div class="grid-2">
+    <div class="card" style="padding:6px 16px 10px">
+      <table><thead><tr><th>变更单</th><th>环境 / 风险</th><th>提交人</th><th>操作</th></tr></thead><tbody>
+        ${pending.map(c=>`<tr class="click" onclick="openChange('${c.no}')">
+          <td><div class="mono" style="font-size:10.5px;color:var(--muted)">${c.no}</div><div style="font-size:12.5px">${esc(c.title)}</div></td>
+          <td>${envTag(c.env)} ${risk(c.risk)}</td>
+          <td>${esc(c.submitter)}${c.submitter===CURRENT_USER?'<div class="tiny" style="color:var(--amber);text-transform:none">你提交的，不能审批</div>':''}</td>
+          <td>${c.submitter===CURRENT_USER?'<span class="pill mute">无动作</span>':'<span class="link">审阅 →</span>'}</td>
+        </tr>`).join('') || '<tr><td colspan="4"><div class="empty"><b>没有待审批变更</b>新的提交会出现在这里。</div></td></tr>'}
+      </tbody></table>
+    </div>
+    <div style="display:grid;gap:12px">
+      <div class="card"><div class="card-h"><h3>职责分离检查</h3><span class="tiny">fail-closed</span></div>
+        <div style="display:grid;gap:8px;font-size:12px">
+          <div style="display:flex;justify-content:space-between"><span>提交人 ≠ 审批人</span><span class="pill ok">通过</span></div>
+          <div style="display:flex;justify-content:space-between"><span>发布人 ≠ 审批人</span><span class="pill ok">通过</span></div>
+          <div style="display:flex;justify-content:space-between"><span>高风险仅负责人</span><span class="pill ok">通过</span></div>
+          <div style="display:flex;justify-content:space-between"><span>权限判断失败</span><span class="pill mute">拒绝</span></div>
+        </div>
+      </div>
+      <div class="card"><div class="card-h"><h3>审批提示</h3></div><p class="dim" style="font-size:12px">审批页固定展示完整 Diff、影响面、历史发布/回滚、提交人与风险等级。不设审批超时，不自动驳回。</p></div>
+    </div>
+  </div>`;
+};
+
+/* ============ release console ============ */
+VIEWS.releases = function(){
+  return `
+  <div class="page-head"><div><h2>发布控制台</h2><p>发布结果只有三态：verified / rejected / indeterminate。不确定结果禁止自动重试，只能人工对账。</p></div>
+    <button class="btn primary" onclick="go('changes')">从变更单发布</button>
+  </div>
+  <div class="metrics">
+    <div class="metric v"><div class="metric-label">今日发布</div><div class="metric-val">4<small> 次</small></div><div class="metric-foot">3 成功 / 1 不确定</div></div>
+    <div class="metric c"><div class="metric-label">读回一致率</div><div class="metric-val">100<small>%</small></div><div class="metric-foot">成功项均比对 MD5</div></div>
+    <div class="metric a"><div class="metric-label">待对账</div><div class="metric-val">1<small> 单</small></div><div class="metric-foot">禁止自动重试</div></div>
+    <div class="metric"><div class="metric-label">发布窗口</div><div class="metric-val">全天</div><div class="metric-foot">P0 无紧急通道</div></div>
+  </div>
+  <div class="card" style="padding:6px 16px 10px">
+    <table><thead><tr><th>发布记录</th><th>变更单</th><th>环境</th><th>结果</th><th>读回 MD5</th><th>时间</th><th>TraceId</th><th></th></tr></thead><tbody>
+      ${DATA.releases.map(r=>`<tr><td class="mono" style="font-size:10.5px">${r.id}</td><td class="mono" style="font-size:10.5px">${r.change}</td><td>${envTag(r.env)}</td>
+        <td>${pill(r.status==='verified'?'SUCCEEDED':r.status==='rejected'?'FAILED':'INDETERMINATE')}</td>
+        <td class="mono" style="font-size:10px;color:var(--dim)">${r.md5}</td><td class="mono" style="font-size:10px;color:var(--dim)">${r.at}</td>
+        <td><span class="hash">${r.trace}</span></td>
+        <td>${r.status==='indeterminate'?`<button class="btn danger" onclick="reconcile('${r.change}')">对账</button>`:`<button class="btn" onclick="openChange('${r.change}')">查看</button>`}</td></tr>`).join('')}
+    </tbody></table>
+  </div>
+  <div class="banner warn" style="margin-top:16px"><span class="bicon">!</span><div><b>不确定结果的处置</b><span class="code">REL-502-001</span><br>先读取当前值，与草稿和基线比对，再记录对账结论；系统不自动重试，也不把“无法确认”报告为成功。</div></div>`;
+};
+
+/* ============ env sync ============ */
+VIEWS.envsync = function(){
+  const sel = state.syncSel;
+  return `
+  <div class="page-head"><div><h2>跨环境同步</h2><p>只读对比 dev / staging / prod。同步只能生成目标环境变更单，必须经过目标环境审批与发布，源环境不被修改。</p></div>
+    <div style="display:flex;gap:8px;align-items:center"><span class="tiny">源</span><span class="pill mute">DEV</span><span class="tiny">→</span><span class="tiny">目标</span><span class="pill warn">STAGING</span></div>
+  </div>
+  ${state.syncBanner?'<div class="banner info"><span class="bicon">i</span><div><b>已生成目标变更单 CR-20261122-0021（staging）</b><br>需经 staging 审批与发布；dev 内容未修改。 <span class="link" onclick="openChange(\'CR-20261122-0021\')">打开变更单 →</span></div></div>':''}
+  <div class="card" style="padding:6px 16px 10px">
+    <table class="sync-table"><thead><tr><th style="width:34px"></th><th>DataId</th><th>DEV</th><th>STAGING</th><th>PROD</th></tr></thead><tbody>
+      ${DATA.sync.map(r=>`<tr><td><input type="checkbox" ${sel.includes(r.id)?'checked':''} ${r.diff?'':'disabled'} onchange="toggleSync('${r.id}')" aria-label="选择 ${r.dataId}"></td>
+        <td><div class="mono" style="font-size:11.5px">${r.dataId}</div>${r.sensitive?'<span class="pill warn" style="margin-top:4px">敏感</span>':''}</td>
+        <td><div class="sync-val ${r.diff?'diff':''}">${esc(r.dev)}</div></td>
+        <td><div class="sync-val ${r.diff?'diff':''}">${esc(r.staging)}</div></td>
+        <td><div class="sync-val">${esc(r.prod)}</div></td></tr>`).join('')}
+    </tbody></table>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:12px;flex-wrap:wrap">
+    <span class="tiny">${sel.length} 项已选择 · 仅差异项可选</span>
+    <button class="btn primary" ${sel.length?'':'disabled'} onclick="genSync()">生成 staging 变更单${sel.length?'（'+sel.length+'）':''}</button>
+  </div>`;
+};
+function toggleSync(id){
+  const i = state.syncSel.indexOf(id);
+  if(i>=0) state.syncSel.splice(i,1); else state.syncSel.push(id);
+  render();
+}
+function genSync(){
+  if(!state.syncSel.length) return;
+  const no='CR-20261122-0021';
+  if(!chg(no)){
+    DATA.changes.unshift({no, title:'从 dev 同步支付配置（'+state.syncSel.length+' 项）', app:'支付网关', env:'staging', group:'payment', dataId:state.syncSel[0], type:'UPDATE', status:'PENDING_APPROVAL', risk:'中', submitter:CURRENT_USER, owner:'周启', baseline:'c81f90aa', draft:'b12e77c0', current:'c81f90aa', drift:false, submitted:'2026-11-22 10:55', scheduled:'—', reason:'跨环境同步：dev → staging，仅生成目标变更单', impact:{instances:8, apps:2, unknown:false, owners:['周启']}});
+  }
+  state.syncBanner=true;
+  render();
+  toast('已生成目标变更单，源环境未被修改');
+}
+
+/* ============ audit ============ */
+VIEWS.audit = function(){
+  const f = state.auditFilter;
+  const rows = DATA.audits.filter(a=>{
+    if(f==='all') return true;
+    if(f==='direct') return a.action==='DIRECT_CHANGE';
+    if(f==='release') return a.action.startsWith('RELEASE');
+    return a.action.includes('APPROVAL')||a.action.includes('CHANGE');
+  });
+  return `
+  <div class="page-head"><div><h2>审计与检测</h2><p>审计只追加、不可篡改、永久保留；按日哈希链。直连修改必须在 5 分钟内发现并通知负责人。</p></div>
+    <button class="btn" onclick="verifyChain()">${state.verifying?'校验中…':state.chainVerified?'链完整 ✓':'校验当日链'}</button>
+  </div>
+  <div class="grid-2" style="grid-template-columns:1.5fr .8fr;margin-bottom:14px">
+    <div class="alert-card"><div class="k">DIRECT CHANGE · UNAUTHORIZED</div>
+      <h3>prod / payment.retry 被直接修改</h3>
+      <p>TongNCS 历史显示 09:41:33 出现一次写入，未匹配任何平台发布记录。已通知应用负责人 周启，并要求 5 分钟内响应。</p>
+      <div style="display:flex;gap:8px"><button class="btn danger" onclick="toast('已记录“已知悉”，审计已写入')">确认知悉</button><button class="btn" onclick="toast('已标记误报，需填写原因（演示）')">标记误报</button></div>
+    </div>
+    <div class="card"><div class="card-h"><h3>哈希链</h3><span class="tiny">SHA-256</span></div>
+      <div class="mono" style="font-size:11px;color:var(--muted);line-height:1.8">
+        <div>HEAD <span style="color:var(--volt)">a91f0c…e21b</span></div>
+        <div class="chain"><span>a91f0c</span><i></i><span>77c2e1</span><i></i><span>bc10aa</span><i></i><span>0d91fe</span></div>
+        <div style="margin-top:8px">今日事件 <b style="color:var(--text)">1,204</b> · 断链 0</div>
+      </div>
+      ${state.chainVerified?'<div class="pill ok" style="margin-top:10px">校验通过 · 2026-11-22</div>':'<div class="pill mute" style="margin-top:10px">尚未校验</div>'}
+    </div>
+  </div>
+  <div style="display:flex;gap:6px;margin-bottom:10px">
+    ${[['all','全部'],['direct','直连'],['release','发布'],['change','变更/审批']].map(([k,l])=>`<button class="btn ${f===k?'primary':''}" onclick="state.auditFilter='${k}';render()">${l}</button>`).join('')}
+  </div>
+  <div class="card" style="padding:8px 16px">
+    ${rows.map(a=>`<div class="audit-row">
+      <div class="tm">${a.time}</div>
+      <div class="act">${a.action}</div>
+      <div class="obj"><b>${esc(a.obj)}</b><span>${esc(a.actor)} · ${esc(a.detail)}</span></div>
+      <div style="display:flex;gap:6px;justify-content:flex-end"><span class="hash ${a.result==='告警'?'':'ok'}">${a.hash}</span><span class="pill ${a.result==='告警'?'bad':'ok'}">${a.result}</span></div>
+    </div>`).join('')}
+  </div>
+  <div class="banner info" style="margin-top:14px"><span class="bicon">i</span><div>检测盲区：TongNCS 历史不足或检测中断时标注“盲区”，不得推断为“无变更”。</div></div>`;
+};
+function verifyChain(){
+  if(state.verifying) return;
+  state.verifying=true; render();
+  setTimeout(()=>{ state.verifying=false; state.chainVerified=true; render(); toast('当日哈希链完整，校验结果已写入审计'); }, 900);
+}
+
+/* ============ recycle ============ */
+VIEWS.recycle = function(){
+  return `
+  <div class="page-head"><div><h2>回收站</h2><p>删除为软删除，保留 30 天。恢复必须写 TongNCS 并读回；同名冲突只能“覆盖并重新审批”或放弃。</p></div>
+    <span class="tiny">${DATA.recycle.length} ITEMS · 30 DAYS</span>
+  </div>
+  <div class="admin-grid">
+    ${DATA.recycle.map(r=>`<div class="recycle-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div class="tiny">${r.app} · ${(ENV[r.env]||{}).label}</div><div class="mono" style="font-size:12px;margin-top:4px">${r.dataId}</div></div><div class="days">${r.days}<small> 天</small></div></div>
+      <div class="mono" style="font-size:10px;color:var(--dim)">删除于 ${r.deleted} · ${esc(r.by)}</div>
+      ${r.conflict?'<div class="pill warn">同名配置已存在</div>':'<div class="pill mute">可直接恢复</div>'}
+      <button class="btn" onclick="restoreItem('${r.id}')">恢复</button>
+    </div>`).join('')}
+  </div>
+  <div class="banner info" style="margin-top:16px"><span class="bicon">i</span><div>恢复与回滚都会生成新的发布记录，不覆盖历史；同名冲突禁止静默覆盖（RB-409-001）。</div></div>`;
+};
+function restoreItem(id){
+  const r = DATA.recycle.find(x=>x.id===id);
+  if(!r) return;
+  if(r.conflict){
+    openModal('恢复冲突：同名配置已存在', `
+      <div class="banner bad"><span class="bicon">!</span><div><b>不能静默覆盖</b><span class="code">RB-409-001</span><br>目标环境已存在同名配置。请选择覆盖并重新审批，或放弃恢复。</div></div>
+      <div class="kv"><div><dt>待恢复</dt><dd class="mono">${r.dataId}</dd></div><div><dt>环境</dt><dd>${(ENV[r.env]||{}).label}</dd></div><div><dt>已存在</dt><dd>同名配置 · 当前生效</dd></div><div><dt>剩余保留</dt><dd>${r.days} 天</dd></div></div>`,
+      [{label:'放弃'},{label:'覆盖并重新审批',primary:true,onClick:()=>{ DATA.recycle = DATA.recycle.filter(x=>x.id!==id); toast('已创建覆盖变更单，需重新审批后才能恢复','warn'); render(); }}]);
+    return;
+  }
+  openModal('确认恢复', `<p>将写入 ${(ENV[r.env]||{}).label} 的 TongNCS 并立即读回校验，生成新的发布记录。</p><div class="kv"><div><dt>配置</dt><dd class="mono">${r.dataId}</dd></div><div><dt>剩余保留</dt><dd>${r.days} 天</dd></div></div>`, [
+    {label:'取消'},{label:'确认恢复',primary:true,onClick:()=>{ DATA.recycle = DATA.recycle.filter(x=>x.id!==id); toast('已恢复并读回一致，审计已写入'); render(); }}
+  ]);
+}
+
+/* ============ schedules ============ */
+VIEWS.schedules = function(){
+  return `
+  <div class="page-head"><div><h2>定时任务</h2><p>审批通过后可按计划发布。到点必须重新校验；失败转回“待发布”并告警，不自动补发。</p></div><span class="tiny">ASIA/SHANGHAI</span></div>
+  <div class="card" style="padding:8px 16px">
+    ${DATA.schedules.map((s,i)=>`<div class="sched-row">
+      <div><div class="mono" style="font-size:11px;color:var(--muted)">${s.change}</div><div class="tiny" style="text-transform:none;letter-spacing:0">${(ENV[s.env]||{}).label} · ${s.at}</div></div>
+      <div class="countdown">${s.remain}</div>
+      <div>${s.status==='等待到点'?'<span class="pill run">等待到点</span>':s.status==='已发布'?'<span class="pill ok">已发布</span>':'<span class="pill bad">到点复核失败</span>'}</div>
+      <div style="text-align:right">${s.status==='等待到点'?`<button class="btn danger" onclick="cancelScheduleItem(${i})">取消</button>`:s.status==='到点复核失败'?`<button class="btn" onclick="toast('已重新校验：基线仍不一致，请人工处理','bad')">重试</button>`:'<span class="tiny">—</span>'}</div>
+    </div>`).join('')}
+  </div>
+  <div class="banner warn" style="margin-top:14px"><span class="bicon">!</span><div><b>到点复核失败</b><span class="code">SCH-409-002</span><br>基线已变化或实例不可用时不执行写入，任务转回“待发布”并告警；恢复后不自动补发。</div></div>`;
+};
+function cancelScheduleItem(i){
+  const s = DATA.schedules[i];
+  openModal('取消定时', `<p>确认取消 <b class="mono">${s.change}</b> 的定时发布？取消后不再执行，变更单回到“待发布”。</p>`, [
+    {label:'返回'},{label:'确认取消',danger:true,onClick:()=>{ s.status='已取消'; toast('定时已取消，审计已写入','warn'); render(); }}
+  ]);
+}
+
+/* ============ batches ============ */
+VIEWS.batches = function(){
+  const b = curBatch();
+  const draft = b.status==='DRAFT', pending = b.status==='PENDING_APPROVAL';
+  const label = draft?'草稿 · 待提交':pending?'审批中 · 等待通过':b.fail?`部分成功 · ${b.fail} 项失败`:'全部成功';
+  const color = draft||pending?'var(--dim)':b.fail?'var(--amber)':'var(--green)';
+  return `
+  <div class="page-head"><div><h2>批量变更</h2><p>父单 + DataId 子项。新建批量时逐项填写新值；草稿阶段可点“编辑值”修改。发布按 DataId 逐个写入并读回。</p></div><button class="btn primary" onclick="go('catalog');toast('在配置目录勾选 DataId 后点“批量发起变更”','warn')">+ 新建批量</button></div>
+  ${DATA.batches.length>1?`<div class="batch-pick">${DATA.batches.map(x=>`<button class="btn ${x.id===b.id?'primary':''}" onclick="state.batchId='${x.id}';render()">${x.id}</button>`).join('')}</div>`:''}
+  <div class="batch-card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
+      <div><div class="tiny">${b.id} · ${(ENV[b.env]||{}).label}</div><h3 style="font-family:var(--disp);font-size:19px;margin-top:4px">${b.title}</h3></div>
+      <div style="text-align:right"><div class="mono" style="font-size:22px;color:${color}">${b.ok}/${b.total}</div><div class="tiny">成功 / 子项</div></div>
+    </div>
+    <div class="progress"><i style="width:${b.ok/b.total*100}%"></i><i class="f" style="width:${b.fail/b.total*100}%"></i></div>
+    <div class="tiny" style="margin-bottom:8px">${label}</div>
+    ${b.items.map((it,i)=>`<div class="subitem" style="flex-wrap:wrap">
+      <span class="mono" style="font-size:10.5px;color:var(--muted)">${it.id}</span>
+      <span class="sp mono" style="font-size:11.5px">${esc(it.dataId)}</span>
+      ${draft?`<button class="btn" onclick="editBatchItem(${i})">编辑值</button>`:''}
+      ${it.status==='成功'?'<span class="pill ok">成功 · 不重发</span>':
+        (it.status==='待提交'||it.status==='待审批')?`<span class="pill mute">${it.status}</span>`:
+        '<span class="pill bad">失败</span><span class="tiny" style="text-transform:none">'+(it.reason||'')+'</span><button class="btn" onclick="retryBatchItem('+i+')">重试</button>'}
+      <div style="flex-basis:100%;margin-top:3px" class="tiny mono">${(it.changes||[]).map(ch=>ch.sensitive?`${esc(ch.key)}: ••••••（已更新）`:`${esc(ch.key)}: ${esc(ch.from)} → ${esc(ch.to)}`).join(' · ')}</div>
+    </div>`).join('')}
+    ${draft?`<div style="margin-top:12px;display:flex;gap:8px;align-items:center"><button class="btn primary" onclick="submitBatch()">提交审批</button><span class="tiny">父单统一审批；发布仍按 DataId 逐个写入并读回</span></div>`:''}
+    ${pending?`<div class="banner info" style="margin-top:12px"><span class="bicon">i</span><div>父单审批中。通过后按 DataId 逐个发布；成功项不重发，失败项可单独重试。</div></div>`:''}
+  </div>`;
+};
+function retryBatchItem(i){
+  const b = curBatch(); const it = b.items[i];
+  openModal('重试失败子项', `<p>只重试失败项，已成功的子项不会重复写入。</p><div class="kv"><div><dt>子项</dt><dd class="mono">${it.id}</dd></div><div><dt>配置</dt><dd class="mono">${it.dataId}</dd></div><div><dt>失败原因</dt><dd>${it.reason||'实例不可用'}</dd></div><div><dt>重试次数</dt><dd>1 / 3</dd></div></div>`, [
+    {label:'取消'},{label:'确认重试',primary:true,onClick:()=>{ it.status='成功'; it.reason=''; b.ok++; b.fail--; toast('子项重试成功，父单状态已更新'); render(); }}
+  ]);
+}
+
+/* ============ admin ============ */
+VIEWS.admin = function(){
+  const t = state.adminTab;
+  const body = t==='users' ? `
+    <div class="card" style="padding:6px 16px 10px">
+      <table><thead><tr><th>账号</th><th>角色</th><th>授权范围</th><th>状态</th><th>最近登录</th><th></th></tr></thead><tbody>
+        ${DATA.users.map((u,i)=>`<tr><td><div style="font-size:13px">${esc(u.name)}</div><div class="mono" style="font-size:10px;color:var(--dim)">${u.account}</div></td>
+          <td>${esc(u.role)}</td><td style="font-size:12px">${esc(u.apps)}</td><td><span class="pill ${u.status==='启用'?'ok':'bad'}">${u.status}</span></td><td class="mono" style="font-size:10px;color:var(--dim)">${u.last}</td>
+          <td><button class="btn" onclick="disableUser(${i})">禁用</button></td></tr>`).join('')}
+      </tbody></table>
+    </div>
+    <div class="card" style="margin-top:14px"><div class="card-h"><h3>应用 × 环境授权矩阵</h3><span class="tiny">10 个权限点</span></div>
+      <div style="display:grid;gap:8px">${['支付网关 / prod','支付网关 / staging','订单服务 / staging','库存服务 / prod'].map((r,i)=>`<div style="display:flex;align-items:center;gap:12px;font-size:12px"><span style="width:170px">${r}</span><div class="grant">${Array.from({length:10}).map((_,j)=>`<i class="${j< (6-i%2)?'on':''}" title="权限点 ${j+1}"></i>`).join('')}</div><span class="tiny">${6-i%2} / 10</span></div>`).join('')}</div>
+    </div>` : t==='instances' ? `
+    <div class="admin-grid">
+      ${DATA.instances.map((x,i)=>`<div class="instance"><div class="top"><div><h4>${x.name}</h4><div class="addr">${x.addr}</div></div><span class="pill ok">健康</span></div>
+        <div class="kv" style="grid-template-columns:1fr 1fr"><div><dt>绑定环境</dt><dd>${(ENV[x.env]||{}).label} · ${(ENV[x.env]||{}).name}</dd></div><div><dt>延迟</dt><dd class="mono">${x.latency}</dd></div></div>
+        <button class="btn" style="margin-top:10px" onclick="testInstance(${i})">测试连接</button></div>`).join('')}
+    </div>
+    <div class="banner info" style="margin-top:14px"><span class="bicon">i</span><div>每个环境只能绑定一个实例，同一实例不得复用；连接测试验证连通性与读写权限。实例不健康时阻断该环境所有写操作。</div></div>` : `
+    <div class="card" style="padding:6px 16px 10px">
+      <table><thead><tr><th>应用</th><th>环境</th><th>企业微信群</th><th>Webhook</th><th>最近推送</th><th></th></tr></thead><tbody>
+        ${DATA.bindings.map((b,i)=>`<tr><td>${b.app}</td><td>${envTag(b.env)}</td><td>${b.group}</td><td>${b.webhook==='已绑定'?'<span class="pill ok">已绑定</span>':'<span class="pill warn">待验证</span>'}</td><td class="mono" style="font-size:10px;color:var(--dim)">${b.last}</td><td><button class="btn" onclick="toast('已发送测试消息（演示）')">测试</button></td></tr>`).join('')}
+      </tbody></table>
+    </div>
+    <div class="banner warn" style="margin-top:14px"><span class="bicon">!</span><div>通知失败不阻塞业务；连续失败重试 3 次后只写审计并通知平台管理员，不回滚业务，且通知内容不含敏感明文。</div></div>`;
+  return `
+  <div class="page-head"><div><h2>管理与设置</h2><p>自建账号与“应用 × 环境”授权；实例与环境一一绑定；通知绑定按应用配置。</p></div><span class="tiny">ADMIN ONLY</span></div>
+  <div style="display:flex;gap:6px;margin-bottom:14px">
+    ${[['users','账号与授权'],['instances','实例与环境'],['bindings','通知绑定']].map(([k,l])=>`<button class="btn ${t===k?'primary':''}" onclick="state.adminTab='${k}';render()">${l}</button>`).join('')}
+  </div>
+  ${body}`;
+};
+function disableUser(i){
+  const u = DATA.users[i];
+  openModal('禁用账号', `<p>禁用后立即阻断登录与写操作；名下未完成变更单转交应用负责人。动作写入审计。</p><div class="kv"><div><dt>账号</dt><dd>${esc(u.name)} · ${u.account}</dd></div><div><dt>当前状态</dt><dd>${u.status}</dd></div></div>`, [
+    {label:'取消'},{label:'确认禁用',danger:true,onClick:()=>{ u.status='已禁用'; toast('账号已禁用，未完成变更单已转交','warn'); render(); }}
+  ]);
+}
+function testInstance(i){
+  const x = DATA.instances[i];
+  toast(`连接测试通过 · ${x.name} · ${x.latency}`);
+}
+
+/* ============ notifications / palette ============ */
+function openNotifications(){
+  openModal('通知中心', DATA.notifications.map(n=>`<div class="notif"><span class="nd ${n.read?'read':''}"></span><div><b>${esc(n.title)}</b><div class="dim" style="font-size:12px">${esc(n.body)}</div><span>${n.time}</span></div></div>`).join(''), [
+    {label:'全部已读',onClick:()=>{ DATA.notifications.forEach(n=>n.read=true); toast('已全部标记为已读'); }},
+    {label:'关闭',primary:true}
+  ]);
+}
+function paletteItems(q=''){
+  const s = q.trim().toLowerCase();
+  const out = [];
+  NAV.forEach(g=>g.items.forEach(([v,l])=>out.push({type:'view',v,label:l,group:g.label})));
+  DATA.changes.slice(0,5).forEach(c=>out.push({type:'change',v:c.no,label:c.title,group:'变更单'}));
+  return out.filter(x=>!s || x.label.toLowerCase().includes(s) || x.v.toLowerCase().includes(s));
+}
+function openPalette(){
+  openModal('命令面板', `<input id="palette-input" placeholder="搜索页面或变更单…" oninput="filterPalette(this.value)" autofocus><div id="palette-list" style="margin-top:8px">${paletteItems('').slice(0,8).map((x,i)=>`<div class="pl" onclick="pickPalette('${x.type}','${x.v}')"><span>${esc(x.label)}</span><span class="k">${x.group} · ${x.type==='view'?'VIEW':'CHANGE'}</span></div>`).join('')}</div>`, []);
+  setTimeout(()=>{ const el=document.getElementById('palette-input'); if(el) el.focus(); },30);
+}
+function filterPalette(q){
+  document.getElementById('palette-list').innerHTML = paletteItems(q).slice(0,8).map(x=>`<div class="pl" onclick="pickPalette('${x.type}','${x.v}')"><span>${esc(x.label)}</span><span class="k">${x.group}</span></div>`).join('') || '<div class="empty">没有匹配项</div>';
+}
+function pickPalette(type, v){
+  closeModal();
+  if(type==='view') go(v); else openChange(v);
+}
+
+/* ============ boot ============ */
+function boot(){ render(); }
+document.addEventListener('keydown', e=>{
+  if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); openPalette(); }
+  if(e.key==='Escape') closeModal();
+});
+boot();
+
+</script>
+</body>
+</html>

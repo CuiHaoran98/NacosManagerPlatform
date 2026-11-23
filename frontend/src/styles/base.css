@@ -1,0 +1,77 @@
+/*
+ * 全局基础样式：排版基线、滚动条、通用工具类
+ * 字体通过 @fontsource 自托管（离线可用，避免外部依赖）—— 见 main.ts
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ncg-ink);
+  color: var(--ncg-text-1);
+  font-family: var(--ncg-font-body);
+  font-size: var(--ncg-fs-base);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--ncg-font-display);
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 0;
+  color: var(--ncg-text-1);
+}
+
+p { margin: 0; }
+
+a {
+  color: var(--ncg-cyan);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+
+code, pre, .ncg-data {
+  font-family: var(--ncg-font-data);
+  font-variant-numeric: tabular-nums; /* 数据列对齐 */
+}
+
+/* 滚动条（深色、细） */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--ncg-line-strong);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover { background: oklch(42% 0.03 261.6); }
+
+/* ===== 过渡（页面过渡 300–500ms；禁 bounce；遵循 prefers-reduced-motion） ===== */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: opacity var(--ncg-dur-page) var(--ncg-ease),
+              transform var(--ncg-dur-page) var(--ncg-ease);
+}
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.fade-slide-leave-to {
+  opacity: 0;
+}
+
+/* ===== 工具类 ===== */
+.ncg-mono { font-family: var(--ncg-font-data); font-variant-numeric: tabular-nums; }
+.ncg-muted { color: var(--ncg-text-3); }
+.ncg-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ncg-prose { max-width: var(--ncg-measure); } /* 正文 65ch 排版宽度 */
